@@ -9,8 +9,6 @@ def start_client(address):
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.connect((address, 8888))
     grid = Grid()
-    grid.display()
-    #...TODO...
 
     while True:
         s_to_read, _, _ = select.select([s], [], [])
@@ -22,7 +20,7 @@ def start_client(address):
 def decode(message):
 
     msg_str = str(message, "utf-8", "strict")
-    if msg_str == "TRY AGAIN"
-        #...TODO
-
-
+    if msg_str.startswith("GRID "):
+        msg_str = msg_str.strip("GRID")
+        for i in range(9):
+            grid.cells[i] = msg_str[i]
