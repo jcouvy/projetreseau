@@ -39,4 +39,4 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         start_server()
     if len(sys.argv) == 2:
-        start_client()
+        start_client(argv[1])
