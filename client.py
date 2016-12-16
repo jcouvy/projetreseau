@@ -14,17 +14,17 @@ def start_client(address):
         s_to_read, _, _ = select.select([s], [], [])
         for tmp_s in s_to_read:
             server_msg = tmp_s.recv(32)
-            decode(s, server_msg, grid)
+            decode(tmp_s, server_msg, grid)
 
 
 def decode(socket, message, grid):
 
     msg_str = message.decode("utf-8")
     if msg_str.startswith("GRID "):
-        msg_str = msg_str.strip("GRID")
+        msg_str = msg_str.strip("GRID ")
 
         for i in range(9):
-            grid.cells[i] = msg_str[i]
+            grid.cells[i] = (msg_str[i])
 
         grid.display()
 

@@ -57,7 +57,7 @@ def start_server():
     connection_list = []
     connection_list.append(server_socket)
 
-    print('Server started on port {0}').format(PORT)
+    print('Server started on port {0}'.format(PORT))
 
     while True:
         read_sockets, _ , _ = select.select(connection_list, [], [])
@@ -69,8 +69,8 @@ def start_server():
                             socket.gethostname(),
                             socket.gethostbyname(socket.gethostname()))
                 connection_list.append(user)
-                print ('Client {} ({}) connected').format(user.name,
-                                                          user.ip)
+                print ('Client {} ({}) connected'.format(user.name,
+                                                          user.ip))
 
                 if (len(connection_list) - 1) % 2 == 0:
                     game = Game()
@@ -78,15 +78,15 @@ def start_server():
                     game.send_turn()
                     print ('New game started \n' \
                            ' Player 1: {}\n'     \
-                           ' Player 2: {}').format(game.playerOne.name,
-                                                   game.playerTwo.name)
+                           ' Player 2: {}'.format(game.playerOne.name,
+                                                   game.playerTwo.name))
             else:
                 data = client.socket.recv(RECV_BUFFER)
                 if data:
                         print ('Received data from client')
                 else:
-                    print ('Client {} ({}) disconnected').format(client.name,
-                                                                 client.ip)
+                    print ('Client {} ({}) disconnected'.format(client.name,
+                                                                 client.ip))
                     connection_list.remove(client)
                     client.socket.close()
 
