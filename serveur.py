@@ -7,9 +7,15 @@ import random
 
 from grid import *
 
+"""
+Each user (new socket) is defined by 3 arguments:
+    - a Socket,
+    - an ID, the computer's hostname,
+    - the client IP address (v4).
+"""
 class User:
     def __init__(self, socket, name, ip):
-        socket.setblocking(0) # Keeps control in case of error/timeout
+        socket.setblocking(False) # Keeps control in case of error/timeout
         self.socket = socket
         self.name   = name
         self.ip     = ip
@@ -17,7 +23,14 @@ class User:
     # Necessary with select based TCP server
     def fileno(self):
         return self.socket.fileno()
-
+"""
+The class Game gives a few functions to help the server operate the room.
+Each game contains:
+    - Two players
+    # TODO : player array and obs array
+    - Three grids (P1, P2, Obs)
+    - The next turn
+"""
 class Game:
     def __init__(self):
         playerOne = None
@@ -27,46 +40,62 @@ class Game:
         gridObs = Grid()
         turn = -1
 
+"""
+Fills the Game structure and sends a byte message encoding each player's grid.
+The first turn is chosen with a pseudo random coin-flip.
+"""
     def start(self, playerA, playerB):
         self.playerOne = playerA
         self.playerTwo = playerB
         self.turn = random.randint(1,2)
 
-        self.playerOne.socket.send(b'GRID 000000000\n')
-        self.playerTwo.socket.send(b'GRID 000000000\n')
+        self.playerOne.socket.send(b'14GRID 000000000')
+        self.playerTwo.socket.send(b'14GRID 000000000')
 
+"""
+Send the next turn in a byte-string to each player.
+"""
     def send_turn(self):
         assert(self.turn == J1 or self.turn == J2)
         if self.turn == J1:
-            self.playerOne.socket.send(b'PLAY\n')
-            self.playerTwo.socket.send(b'WAIT\n')
+            self.playerOne.socket.send(b'PLAY')
+            self.playerTwo.socket.send(b'WAIT')
         else:
-            self.playerOne.socket.send(b'WAIT\n')
-            self.playerTwo.socket.send(b'PLAY\n')
+            self.playerOne.socket.send(b'WAIT')
+            self.playerTwo.socket.send(b'PLAY')
 
-    def encode_grid(self, turn):
+"""
+Returns an encoded byte-string of the player's Grid given in arg.
+"""
+    def encode_grid(self, player):
         msg = "GRID "
-        if turn == J1:
+        if player == J1:
             for cell in self.gridOne:
                 msg = msg + str(cell)
-        if turn == J2:
+        if player == J2:
             for cell in self.gridTwo:
                 msg = msg + str(cell)
         return msg.encode('utf-8')
-
+"""
+Decodes the player's move, modifies the according Grid, sends the encoded grid
+back and then updates the turn.
+"""
     def handler(self, player, data):
         cellNum = data.decode()
         if self.turn == J1 and player is self.playerOne:
             self.gridOne.play(J1, cellNum)
             self.gridObs.play(J1, cellNum)
-            player.send(encode_grid(self.turn))
+            player.send(encode_grid(J1))
             self.turn = J2
         elif self.turn == J2 and player is self.playerTwo:
             self.gridTwo.play(J2, cellNum)
             self.gridObs.play(J2, cellNum)
-            player.send(encode_grid(self.turn))
+            player.send(encode_grid(J2))
             self.turn = J1
-
+"""
+Checks if the game is over (if a win condition is found on the global Grid).
+Send a byte-string to each players according to the output of the game.
+"""
     def game_over(self):
         with self.gridObs.gameOver() as state:
             if state == EMPTY:
