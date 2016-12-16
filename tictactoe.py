@@ -36,4 +36,5 @@ from client import *
 # Une fois la partie terminée le serveur envoie un message informant les joueurs du gagnant de la partie. Même chose pour les observateurs.
 
 if __name__ == '__main__':
-    #...
+    if len(sys.argv) == 1:
+        start_server()
