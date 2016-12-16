@@ -14,13 +14,23 @@ def start_client(address):
         s_to_read, _, _ = select.select([s], [], [])
         for tmp_s in s_to_read:
             server_msg = tmp_s.recv(32)
-            decode(server_msg)
+            decode(s, server_msg)
 
 
-def decode(message):
+def decode(socket, message):
 
     msg_str = str(message, "utf-8", "strict")
     if msg_str.startswith("GRID "):
         msg_str = msg_str.strip("GRID")
+
         for i in range(9):
             grid.cells[i] = msg_str[i]
+
+        grid.display()
+
+    if msg_str.startswith("PLAY"):
+        shot = int(input("Quel coup voulez-vous jouer?"))
+        socket.send(bytearray(shot, "utf-8"))
+
+    if msg_str.startswith("WAIT"):
+        print("Votre adversaire est en train de jouer, veuillez patienter...")
