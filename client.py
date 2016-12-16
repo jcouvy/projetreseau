@@ -1,6 +1,7 @@
 from grid import *
 import socket
 import select
+import string
 
 
 def start_client(address):
@@ -24,7 +25,8 @@ def decode(socket, message, grid):
         msg_str = msg_str.strip("GRID ")
 
         for i in range(9):
-            grid.cells[i] = (msg_str[i])
+            print(int(msg_str[i]))
+            grid.cells[i] = int(msg_str[i])
 
         grid.display()
 
