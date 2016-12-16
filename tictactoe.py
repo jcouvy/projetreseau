@@ -1,10 +1,14 @@
+# -*- coding: utf-8 -*-
+#!/usr/bin/python3
+
 from grid import *
-from serveur import *
 from client import *
+from serveur import *
+import sys
 
 # _____________________________R E A D M E____________________________________
 
-# Déroulement d'une partie:
+# Deroulement d'une partie:
 
 # Serveur initialise trois grilles (3x3) pour le Joueur 1, 2 et l'état de la partie (visible par les observateurs).
 
@@ -39,4 +43,4 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         start_server()
     if len(sys.argv) == 2:
-        start_client(argv[1])
+        start_client(sys.argv[1])
