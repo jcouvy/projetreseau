@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import socket, select
 import re
 import sys
@@ -34,13 +36,48 @@ class Game:
         self.playerTwo.socket.send(b'GRID 000000000\n')
 
     def send_turn(self):
-        assert(self.turn == 1 or self.turn == 2)
-        if self.turn == 1:
+        assert(self.turn == J1 or self.turn == J2)
+        if self.turn == J1:
             self.playerOne.socket.send(b'PLAY\n')
             self.playerTwo.socket.send(b'WAIT\n')
         else:
             self.playerOne.socket.send(b'WAIT\n')
             self.playerTwo.socket.send(b'PLAY\n')
+
+    def encode_grid(self, turn):
+        msg = "GRID "
+        if turn == J1:
+            for cell in self.gridOne:
+                msg = msg + str(cell)
+        if turn == J2:
+            for cell in self.gridTwo:
+                msg = msg + str(cell)
+        return msg.encode('utf-8')
+
+    def handler(self, player, data):
+        cellNum = data.decode()
+        if self.turn == J1 and player is self.playerOne:
+            self.gridOne.play(J1, cellNum)
+            self.gridObs.play(J1, cellNum)
+            player.send(encode_grid(self.turn))
+            self.turn = J2
+        elif self.turn == J2 and player is self.playerTwo:
+            self.gridTwo.play(J2, cellNum)
+            self.gridObs.play(J2, cellNum)
+            player.send(encode_grid(self.turn))
+            self.turn = J1
+
+    def game_over(self):
+        with self.gridObs.gameOver() as state:
+            if state == EMPTY:
+                self.playerOne.send(b'GG draw')
+                self.playerTwo.send(b'GG draw')
+            if state == J1:
+                self.playerOne.send(b'GG win')
+                self.playerTwo.send(b'GG lose')
+            if state == J2:
+                self.playerTwo.send(b'GG win')
+                self.playerOne.send(b'GG lose')
 
 
 def start_server():
@@ -70,7 +107,7 @@ def start_server():
                             socket.gethostbyname(socket.gethostname()))
                 connection_list.append(user)
                 print ('Client {} ({}) connected'.format(user.name,
-                                                          user.ip))
+                                                         user.ip))
 
                 if (len(connection_list) - 1) % 2 == 0:
                     game = Game()
@@ -79,14 +116,20 @@ def start_server():
                     print ('New game started \n' \
                            ' Player 1: {}\n'     \
                            ' Player 2: {}'.format(game.playerOne.name,
-                                                   game.playerTwo.name))
+                                                  game.playerTwo.name))
+
             else:
                 data = client.socket.recv(RECV_BUFFER)
                 if data:
-                        print ('Received data from client')
+                    print ('Received data from client')
+                    try:
+                        game.handler(client, data)
+                    except:
+                        continue
+
                 else:
                     print ('Client {} ({}) disconnected'.format(client.name,
-                                                                 client.ip))
+                                                                client.ip))
                     connection_list.remove(client)
                     client.socket.close()
 
