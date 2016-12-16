@@ -15,7 +15,7 @@ def start_client(address):
     while True:
         s_to_read, _, _ = select.select([s], [], [])
         for tmp_s in s_to_read:
-            server_msg = tmp_s.recv(32)
+            server_msg = tmp_s.recv(14)
             print(server_msg)
             decode(tmp_s, server_msg, grid)
 
@@ -30,13 +30,10 @@ def decode(socket, message, grid):
             grid.cells[i] = int(msg_str[i])
 
         grid.display()
-        time.sleep(0.1)
 
     if msg_str.startswith("PLAY"):
         shot = input("Quel coup voulez-vous jouer?")
         socket.send(bytearray(shot, "utf-8"))
-        time.sleep(0.1)
 
     if msg_str.startswith("WAIT"):
         print("Votre adversaire est en train de jouer, veuillez patienter...")
-        time.sleep(0.1)
