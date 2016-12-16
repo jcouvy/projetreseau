@@ -32,18 +32,19 @@ Each game contains:
     - The next turn
 """
 class Game:
-    def __init__(self):
-        playerOne = None
-        playerTwo = None
-        gridOne = Grid()
-        gridTwo = Grid()
-        gridObs = Grid()
-        turn = -1
 
-"""
-Fills the Game structure and sends a byte message encoding each player's grid.
-The first turn is chosen with a pseudo random coin-flip.
-"""
+    def __init__(self):
+        self.playerOne = None
+        self.playerTwo = None
+        self.gridOne = Grid()
+        self.gridTwo = Grid()
+        self.gridObs = Grid()
+        self.turn = -1
+
+    """
+    Fills the Game structure and sends a byte message encoding each player's grid.
+    The first turn is chosen with a pseudo random coin-flip.
+    """
     def start(self, playerA, playerB):
         self.playerOne = playerA
         self.playerTwo = playerB
@@ -52,9 +53,9 @@ The first turn is chosen with a pseudo random coin-flip.
         self.playerOne.socket.send(b'GRID 000000000')
         self.playerTwo.socket.send(b'GRID 000000000')
 
-"""
-Send the next turn in a byte-string to each player.
-"""
+    """
+    Send the next turn in a byte-string to each player.
+    """
     def send_turn(self):
         assert(self.turn == J1 or self.turn == J2)
         if self.turn == J1:
@@ -64,38 +65,41 @@ Send the next turn in a byte-string to each player.
             self.playerOne.socket.send(b'WAIT')
             self.playerTwo.socket.send(b'PLAY')
 
-"""
-Returns an encoded byte-string of the player's Grid given in arg.
-"""
+    """
+    Returns an encoded byte-string of the player's Grid given in arg.
+    """
     def encode_grid(self, player):
         msg = "GRID "
         if player == J1:
-            for cell in self.gridOne:
+            for cell in self.gridOne.cells:
                 msg = msg + str(cell)
         if player == J2:
-            for cell in self.gridTwo:
+            for cell in self.gridTwo.cells:
                 msg = msg + str(cell)
         return msg.encode('utf-8')
-"""
-Decodes the player's move, modifies the according Grid, sends the encoded grid
-back and then updates the turn.
-"""
+
+    """
+    Decodes the player's move, modifies the according Grid, sends the encoded grid
+    back and then updates the turn.
+    """
     def handler(self, player, data):
-        cellNum = data.decode()
+        cellNum = int(data.decode())
         if self.turn == J1 and player is self.playerOne:
             self.gridOne.play(J1, cellNum)
             self.gridObs.play(J1, cellNum)
-            player.send(encode_grid(J1))
+            player.socket.send(self.encode_grid(J1))
             self.turn = J2
         elif self.turn == J2 and player is self.playerTwo:
             self.gridTwo.play(J2, cellNum)
             self.gridObs.play(J2, cellNum)
-            player.send(encode_grid(J2))
+            player.socket.send(self.encode_grid(J2))
             self.turn = J1
-"""
-Checks if the game is over (if a win condition is found on the global Grid).
-Send a byte-string to each players according to the output of the game.
-"""
+        print ('Sending encoded grid to players')
+
+    """
+    Checks if the game is over (if a win condition is found on the global Grid).
+    Send a byte-string to each players according to the output of the game.
+    """
     def game_over(self):
         with self.gridObs.gameOver() as state:
             if state == EMPTY:
@@ -125,6 +129,8 @@ def start_server():
 
     print('Server started on port {0}'.format(PORT))
 
+    game = Game()
+
     while True:
         read_sockets, _ , _ = select.select(connection_list, [], [])
 
@@ -139,7 +145,6 @@ def start_server():
                                                          user.ip))
 
                 if (len(connection_list) - 1) % 2 == 0:
-                    game = Game()
                     game.start(connection_list[1], connection_list[2])
                     game.send_turn()
                     print ('New game started \n' \
@@ -151,10 +156,7 @@ def start_server():
                 data = client.socket.recv(RECV_BUFFER)
                 if data:
                     print ('Received data from client')
-                    try:
-                        game.handler(client, data)
-                    except:
-                        continue
+                    game.handler(client, data)
 
                 else:
                     print ('Client {} ({}) disconnected'.format(client.name,
