@@ -4,6 +4,7 @@ import sys
 
 from grid import *
 
+
 def init_grids():
     return Grid(), Grid(), Grid()
 
@@ -12,6 +13,7 @@ def start_server():
     HOST = ''
     PORT = 8888
     RECV_BUFFER = 4096
+    USER_DICT = {}
 
     readers_list = []
 
@@ -33,17 +35,19 @@ def start_server():
                 conn, addr = server_socket.accept()
                 readers_list.append(conn)
                 ip = re.sub(r':*[a-z]*:', '', addr[0])
-                print ('Client {0} connected'.format(ip))
+                USER_DICT.update({str(ip):socket.gethostname()})
+                print ('Client {0} ({1}) connected'.format(USER_DICT.get(ip), ip))
 
 
             else:
                 data = sock.recv(RECV_BUFFER)
                 if data:
-                    print('Received data from client')
+                        print ('Received data from client')
                 else:
-                    print ('Client {0} diconnected'.format(socket.gethostname()))
+                    print ('Client {0} ({1}) disconnect'.format(USER_DICT.get(ip), ip))
                     readers_list.remove(sock)
                     sock.close()
+                    continue
 
 if __name__ == '__main__':
     sys.exit(start_server())

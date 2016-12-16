@@ -1,23 +1,6 @@
-# Liste d'import
-
-# Si le client lance le programme avec le nom du serveur
-# Partie CLIENT
-
-
-# Si le programme est lancé sans arguments:
-# Partie SERVEUR
-# - On ouvre une socket serveur en écoute chargée
-
-# A chaque connexion client :
-# - On rajoute une liaison serveur/client unique (socket) dans une liste de clients (socket_list).
-# -
-
-
-# Main appelé par terminal :
-# Test présence d'un argument:
-# - Mode client / Mode serveur
-
-
+from grid import *
+from serveur import *
+from client import *
 
 # _____________________________R E A D M E____________________________________
 
@@ -51,3 +34,6 @@
 # Tant que le serveur ne détecte pas que la partie est terminée il continue, à chaque coup, d'envoyer une nouvelle séquence décrivant la grille propre de chaque joueur et la grille globale aux observateurs.
 
 # Une fois la partie terminée le serveur envoie un message informant les joueurs du gagnant de la partie. Même chose pour les observateurs.
+
+if __name__ == '__main__':
+    #...
