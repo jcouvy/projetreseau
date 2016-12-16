@@ -4,18 +4,18 @@ from grid import *
 import  random
 
 def main():
-    grids = [grid(), grid(), grid()]
+    grids = [Grid(), Grid(), Grid()]
     current_player = J1
     grids[J1].display()
     while grids[0].gameOver() == -1:
         if current_player == J1:
             shot = -1
             while shot <0 or shot >=NB_CELLS:
-                shot = int(input ("quel case allez-vous jouer ?"))
+                shot = int(input("quel case allez-vous jouer ?"))
         else:
-            shot = random.randint(0,8)
+            shot = random.randint(0, 8)
             while grids[current_player].cells[shot] != EMPTY:
-                shot = random.randint(0,8)
+                shot = random.randint(0, 8)
         if (grids[0].cells[shot] != EMPTY):
             grids[current_player].cells[shot] = grids[0].cells[shot]
         else:
