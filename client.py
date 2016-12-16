@@ -14,12 +14,12 @@ def start_client(address):
         s_to_read, _, _ = select.select([s], [], [])
         for tmp_s in s_to_read:
             server_msg = tmp_s.recv(32)
-            decode(s, server_msg)
+            decode(s, server_msg, grid)
 
 
-def decode(socket, message):
+def decode(socket, message, grid):
 
-    msg_str = str(message, "utf-8", "strict")
+    msg_str = message.decode("utf-8")
     if msg_str.startswith("GRID "):
         msg_str = msg_str.strip("GRID")
 
