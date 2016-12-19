@@ -66,3 +66,6 @@ def execute(commands, grid, socket):
 
         if command.startswith("INVALID"):
             print("Veuillez entrer un entier valide (entre 0 et 8).")
+
+        if command.startswith("OCCUPIED"):
+            print("La case que vous souhaitiez jouer est occupée. Veuillez en sélectionner une autre.")
