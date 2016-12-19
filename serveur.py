@@ -100,9 +100,9 @@ class Game:
                 self.gridObs.play(J1, cellNum)
                 self.gridOne.play(J1, cellNum)
                 print(self.gridOne.cells)
-                
+
             except AssertionError:
-                if (cellNum < 0 or cellNum > NB_CELLS):
+                if (cellNum < 0 or cellNum >= NB_CELLS):
                     player.socket.send(b'INVALID$')
 
                 elif (self.gridObs.cells[cellNum] == J2):
@@ -124,7 +124,7 @@ class Game:
                 print(self.gridTwo.cells)
 
             except AssertionError:
-                if (cellNum < 0 or cellNum > NB_CELLS):
+                if (cellNum < 0 or cellNum >= NB_CELLS):
                     player.socket.send(b'INVALID$')
 
                 elif (self.gridObs.cells[cellNum] == J1):
