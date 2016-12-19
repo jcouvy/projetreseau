@@ -93,27 +93,48 @@ class Game:
             player.socket.send(b'INVALID$')
             player.socket.send(b'PLAY$')
             return
+
         if self.turn == J1 and player is self.playerOne:
             try:
-                self.gridOne.play(J1, cellNum)
+                print(self.gridOne.cells)
                 self.gridObs.play(J1, cellNum)
+                self.gridOne.play(J1, cellNum)
+                print(self.gridOne.cells)
+                
             except AssertionError:
-                print ('Invalid play from {}'.format(player.name))
-                player.socket.send(b'INVALID$')
+                if (cellNum < 0 or cellNum > NB_CELLS):
+                    player.socket.send(b'INVALID$')
+
+                elif (self.gridObs.cells[cellNum] == J2):
+                    self.gridOne.cells[cellNum] = J2
+                    player.socket.send(self.encode_grid(J1))
+                    player.socket.send(b'OCCUPIED$')
+
                 player.socket.send(b'PLAY$')
                 return
+
             player.socket.send(self.encode_grid(J1))
             self.turn = J2
 
         elif self.turn == J2 and player is self.playerTwo:
             try:
-                self.gridTwo.play(J2, cellNum)
+                print(self.gridTwo.cells)
                 self.gridObs.play(J2, cellNum)
+                self.gridTwo.play(J2, cellNum)
+                print(self.gridTwo.cells)
+
             except AssertionError:
-                print ('Invalid play from {}'.format(player.name))
-                player.socket.send(b'INVALID$')
+                if (cellNum < 0 or cellNum > NB_CELLS):
+                    player.socket.send(b'INVALID$')
+
+                elif (self.gridObs.cells[cellNum] == J1):
+                    self.gridTwo.cells[cellNum] = J1
+                    player.socket.send(self.encode_grid(J2))
+                    player.socket.send(b'OCCUPIED$')
+
                 player.socket.send(b'PLAY$')
                 return
+
             player.socket.send(self.encode_grid(J2))
             self.turn = J1
 
@@ -153,7 +174,8 @@ def start_server():
     connection_list = []
     connection_list.append(server_socket)
 
-    print('Server started on port {0}'.format(PORT))
+    print('Server {} started on port {}'.format(socket.gethostbyname(socket.gethostname()),
+                                                PORT))
 
     game = Game()
 
