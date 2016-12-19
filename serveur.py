@@ -12,7 +12,7 @@ from grid import *
 Each user (new socket) is defined by 3 arguments:
     - a Socket,
     - an ID, the computer's hostname,
-    - the client IP address (v4).
+    - the client IP address (v4/v6).
 """
 class User:
     def __init__(self, socket, name, ip):
@@ -31,6 +31,7 @@ Each game contains:
     # TODO : player array and obs array
     - Three grids (P1, P2, Obs)
     - The next turn
+Each byte-message sent by the server to the clients is delimited with a $ sign.
 """
 class Game:
     def __init__(self):
@@ -81,18 +82,38 @@ class Game:
 
     """
     Decodes the player's move, modifies the according Grid, sends the encoded grid
-    back and then updates the turn.
+    back and then updates the turn. Exceptions are raised in order to prevent the server
+    from stopping if any player tries an invalid move (i.e: Grid.play() assert fails).
+    The player is asked to play again if any exception is caught.
     """
     def handler(self, player, data):
-        cellNum = int(data.decode())
+        try:
+            cellNum = int(data.decode())
+        except ValueError:
+            player.socket.send(b'INVALID$')
+            player.socket.send(b'PLAY$')
+            return
         if self.turn == J1 and player is self.playerOne:
-            self.gridOne.play(J1, cellNum)
-            self.gridObs.play(J1, cellNum)
+            try:
+                self.gridOne.play(J1, cellNum)
+                self.gridObs.play(J1, cellNum)
+            except AssertionError:
+                print ('Invalid play from {}'.format(player.name))
+                player.socket.send(b'INVALID$')
+                player.socket.send(b'PLAY$')
+                return
             player.socket.send(self.encode_grid(J1))
             self.turn = J2
+
         elif self.turn == J2 and player is self.playerTwo:
-            self.gridTwo.play(J2, cellNum)
-            self.gridObs.play(J2, cellNum)
+            try:
+                self.gridTwo.play(J2, cellNum)
+                self.gridObs.play(J2, cellNum)
+            except AssertionError:
+                print ('Invalid play from {}'.format(player.name))
+                player.socket.send(b'INVALID$')
+                player.socket.send(b'PLAY$')
+                return
             player.socket.send(self.encode_grid(J2))
             self.turn = J1
 
@@ -107,14 +128,14 @@ class Game:
     def game_over(self):
         state = self.gridObs.gameOver()
         if state == EMPTY:
-            self.playerOne.socket.send(b'DRAW')
-            self.playerTwo.socket.send(b'DRAW')
+            self.playerOne.socket.send(b'DRAW$')
+            self.playerTwo.socket.send(b'DRAW$')
         if state == J1:
-            self.playerOne.socket.send(b'client WIN')
-            self.playerTwo.socket.send(b'LOSE')
+            self.playerOne.socket.send(b'WIN$')
+            self.playerTwo.socket.send(b'LOSE$')
         if state == J2:
-            self.playerTwo.socket.send(b'WIN')
-            self.playerOne.socket.send(b'LOSE')
+            self.playerTwo.socket.send(b'WIN$')
+            self.playerOne.socket.send(b'LOSE$')
         return state
 
 
