@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/python3
 
 import socket, select
@@ -94,6 +95,7 @@ class Game:
             self.gridObs.play(J2, cellNum)
             player.socket.send(self.encode_grid(J2))
             self.turn = J1
+        send_turn()
         print ('Sending encoded grid to players')
 
     """
@@ -119,7 +121,7 @@ def start_server():
     PORT = 8888
     RECV_BUFFER = 4096
 
-    server_socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.bind((HOST, PORT))
     server_socket.listen(1)
@@ -138,11 +140,11 @@ def start_server():
             if client is server_socket:
                 new_socket, addr = server_socket.accept()
                 user = User(new_socket,
-                            socket.gethostname(),
-                            socket.gethostbyname(socket.gethostname()))
+                            'Guest'+str(random.randint(0,9999)),
+                            addr)
                 connection_list.append(user)
-                print ('Client {} ({}) connected'.format(user.name,
-                                                         user.ip))
+                print ('New connection from {} {} '.format(user.name,
+                                                           user.ip))
 
                 if (len(connection_list) - 1) % 2 == 0:
                     game.start(connection_list[1], connection_list[2])
