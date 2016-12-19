@@ -1,5 +1,12 @@
 from grid import *
+
+"""
+The Termios import is used to flush the wild inputs that can interfere with the game.
+It works only on UNIX systems.
+"""
+
 from termios import tcflush, TCIFLUSH
+
 import sys
 import socket
 import select
