@@ -3,9 +3,15 @@ import socket
 import select
 import time
 
+"""
+The client socket is created and the connection to the server is made.
+In the infinite loop, the protocol messages are received, split if necessary,
+then the execute function handles the messages.
+
+"""
+
 
 def start_client(address):
-
     nickname = str(input("Indiquez votre nickname : "))
 
     s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
@@ -14,7 +20,8 @@ def start_client(address):
     s.setblocking(True)
     grid = Grid()
 
-    s.send(bytearray("NICK " + nickname, "utf-8"))
+    if nickname:
+        s.send(bytearray("NICK " + nickname, "utf-8"))
 
     while True:
         s_to_read, _, _ = select.select([s], [], [])
@@ -25,9 +32,13 @@ def start_client(address):
             commands = str_message.split('$')
             execute(commands, grid, tmp_s)
 
+"""
+This function handles the different messages sent from the server.
+
+"""
+
 
 def execute(commands, grid, socket):
-
     for command in commands:
         if command.startswith("GRID "):
             command = command.strip("GRID ")
@@ -52,3 +63,6 @@ def execute(commands, grid, socket):
 
         if command.startswith("DRAW"):
             print("Cette partie se conclue avec une égalité parfaite!")
+
+        if command.startswith("INVALID"):
+            print("Veuillez entrer un entier valide (entre 0 et 8).")
