@@ -11,6 +11,7 @@ URL: http://dept-info.labri.fr/~thibault/Reseau/sujet.pdf
 - Fonctions principales de jeu [✓]
 - Affichage côté client [✓]
 - Gestion des erreurs d'entrée côté client [✓]
+- Instructions fin de partie [✗]
 
 ## Extension
 - Choix d'un pseudonyme [~]
