@@ -144,7 +144,7 @@ def start_server():
                 print ('Client {} ({}) connected'.format(user.name,
                                                          user.ip))
 
-                if (len(connection_list) - 1) % 2 == 0:
+                if (len(connection_list) - 1) == 2:
                     game.start(connection_list[1], connection_list[2])
                     game.send_turn()
                     print ('New game started \n' \
@@ -153,17 +153,30 @@ def start_server():
                                                   game.playerTwo.name))
 
             else:
-                data = client.socket.recv(RECV_BUFFER)
-                if data:
-                    print ('Received data from client')
-                    game.handler(client, data)
+                if client == game.playerOne:
+                    if game.turn == 1:
+                        data = client.socket.recv(RECV_BUFFER)
+                        if data:
+                            print ('Received data from client')
+                            game.handler(client, data)
 
-                else:
-                    print ('Client {} ({}) disconnected'.format(client.name,
-                                                                client.ip))
-                    connection_list.remove(client)
-                    client.socket.close()
+                        else:
+                            print ('Client {} ({}) disconnected'.format(client.name,
+                                                                        client.ip))
+                            connection_list.remove(client)
+                            client.socket.close()
+                elif client == game.playerTwo:
+                    if game.turn == 2:
+                        data = client.socket.recv(RECV_BUFFER)
+                        if data:
+                            print('Received data from client')
+                            game.handler(client, data)
 
+                        else:
+                            print('Client {} ({}) disconnected'.format(client.name,
+                                                                       client.ip))
+                            connection_list.remove(client)
+                            client.socket.close()
 
 if __name__ == '__main__':
     sys.exit(start_server())
