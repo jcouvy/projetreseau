@@ -33,7 +33,6 @@ Each game contains:
     - The next turn
 """
 class Game:
-
     def __init__(self):
         self.playerOne = None
         self.playerTwo = None
@@ -77,6 +76,7 @@ class Game:
         if player == J2:
             for cell in self.gridTwo.cells:
                 msg = msg + str(cell)
+        msg = msg + '$'
         return msg.encode('utf-8')
 
     """
@@ -95,24 +95,27 @@ class Game:
             self.gridObs.play(J2, cellNum)
             player.socket.send(self.encode_grid(J2))
             self.turn = J1
-        send_turn()
-        print ('Sending encoded grid to players')
+
+        if self.game_over() == -1:
+            self.send_turn()
+        print ('Sending encoded grid to {}'.format(player.name))
 
     """
     Checks if the game is over (if a win condition is found on the global Grid).
     Send a byte-string to each players according to the output of the game.
     """
     def game_over(self):
-        with self.gridObs.gameOver() as state:
-            if state == EMPTY:
-                self.playerOne.send(b'GG draw')
-                self.playerTwo.send(b'GG draw')
-            if state == J1:
-                self.playerOne.send(b'GG win')
-                self.playerTwo.send(b'GG lose')
-            if state == J2:
-                self.playerTwo.send(b'GG win')
-                self.playerOne.send(b'GG lose')
+        state = self.gridObs.gameOver()
+        if state == EMPTY:
+            self.playerOne.socket.send(b'DRAW')
+            self.playerTwo.socket.send(b'DRAW')
+        if state == J1:
+            self.playerOne.socket.send(b'WIN')
+            self.playerTwo.socket.send(b'LOSE')
+        if state == J2:
+            self.playerTwo.socket.send(b'WIN')
+            self.playerOne.socket.send(b'LOSE')
+        return state
 
 
 def start_server():
@@ -121,7 +124,7 @@ def start_server():
     PORT = 8888
     RECV_BUFFER = 4096
 
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+    server_socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.bind((HOST, PORT))
     server_socket.listen(1)
@@ -155,30 +158,18 @@ def start_server():
                                                   game.playerTwo.name))
 
             else:
-                if client == game.playerOne:
-                    if game.turn == 1:
-                        data = client.socket.recv(RECV_BUFFER)
-                        if data:
-                            print ('Received data from client')
-                            game.handler(client, data)
-
-                        else:
-                            print ('Client {} ({}) disconnected'.format(client.name,
-                                                                        client.ip))
-                            connection_list.remove(client)
-                            client.socket.close()
-                elif client == game.playerTwo:
-                    if game.turn == 2:
-                        data = client.socket.recv(RECV_BUFFER)
-                        if data:
-                            print('Received data from client')
-                            game.handler(client, data)
-
-                        else:
-                            print('Client {} ({}) disconnected'.format(client.name,
-                                                                       client.ip))
-                            connection_list.remove(client)
-                            client.socket.close()
+                data = client.socket.recv(RECV_BUFFER)
+                if data:
+                    if client == game.playerOne or client == game.playerTwo:
+                        print('Received data from {}'.format(client.name))
+                        game.handler(client, data)
+                    else:
+                        print ('Received data from client')
+                else:
+                    print ('Client {} ({}) disconnected'.format(client.name,
+                                                                client.ip))
+                    connection_list.remove(client)
+                    client.socket.close()
 
 if __name__ == '__main__':
     sys.exit(start_server())
