@@ -5,11 +5,16 @@ import time
 
 
 def start_client(address):
+
+    nickname = str(input("Indiquez votre nickname : "))
+
     s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.connect((address, 8888))
     s.setblocking(True)
     grid = Grid()
+
+    s.send(bytearray("NICK " + nickname, "utf-8"))
 
     while True:
         s_to_read, _, _ = select.select([s], [], [])
@@ -38,3 +43,12 @@ def execute(commands, grid, socket):
 
         if command.startswith("WAIT"):
             print("Votre adversaire est en train de jouer, veuillez patienter...")
+
+        if command.startswith("WIN"):
+            print("Vous avez gagné! Félicitations!")
+
+        if command.startswith("LOSE"):
+            print("Vous avez perdu! Essayez encore!")
+
+        if command.startswith("DRAW"):
+            print("Cette partie se conclue avec une égalité parfaite!")
