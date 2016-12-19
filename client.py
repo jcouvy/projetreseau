@@ -43,3 +43,12 @@ def execute(commands, grid, socket):
 
         if command.startswith("WAIT"):
             print("Votre adversaire est en train de jouer, veuillez patienter...")
+
+        if command.startswith("WIN"):
+            print("Vous avez gagné! Félicitations!")
+
+        if command.startswith("LOSE"):
+            print("Vous avez perdu! Essayez encore!")
+
+        if command.startswith("DRAW"):
+            print("Cette partie se conclue avec une égalité parfaite!")
