@@ -1,7 +1,8 @@
 from grid import *
+from termios import tcflush, TCIFLUSH
+import sys
 import socket
 import select
-import time
 
 """
 The client socket is created and the connection to the server is made.
@@ -49,6 +50,7 @@ def execute(commands, grid, socket):
             grid.display()
 
         if command.startswith("PLAY"):
+            tcflush(sys.stdin, TCIFLUSH)
             shot = input("Quel coup voulez-vous jouer?")
             socket.send(bytearray(shot, "utf-8"))
 
