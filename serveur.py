@@ -110,7 +110,7 @@ class Game:
             self.playerOne.socket.send(b'DRAW')
             self.playerTwo.socket.send(b'DRAW')
         if state == J1:
-            self.playerOne.socket.send(b'WIN')
+            self.playerOne.socket.send(b'client WIN')
             self.playerTwo.socket.send(b'LOSE')
         if state == J2:
             self.playerTwo.socket.send(b'WIN')
@@ -160,6 +160,12 @@ def start_server():
             else:
                 data = client.socket.recv(RECV_BUFFER)
                 if data:
+                    message = data.decode('utf-8')
+                    if message.startswith('NICK'):
+                        message = message.strip('NICK ')
+                        client.name = message
+                        break
+
                     if client == game.playerOne or client == game.playerTwo:
                         print('Received data from {}'.format(client.name))
                         game.handler(client, data)
