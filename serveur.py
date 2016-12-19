@@ -51,8 +51,8 @@ class Game:
         self.playerTwo = playerB
         self.turn = random.randint(1,2)
 
-        self.playerOne.socket.send(b'GRID 000000000')
-        self.playerTwo.socket.send(b'GRID 000000000')
+        self.playerOne.socket.send(b'GRID 000000000$')
+        self.playerTwo.socket.send(b'GRID 000000000$')
 
     """
     Send the next turn in a byte-string to each player.
@@ -60,11 +60,11 @@ class Game:
     def send_turn(self):
         assert(self.turn == J1 or self.turn == J2)
         if self.turn == J1:
-            self.playerOne.socket.send(b'PLAY')
-            self.playerTwo.socket.send(b'WAIT')
+            self.playerOne.socket.send(b'PLAY$')
+            self.playerTwo.socket.send(b'WAIT$')
         else:
-            self.playerOne.socket.send(b'WAIT')
-            self.playerTwo.socket.send(b'PLAY')
+            self.playerOne.socket.send(b'WAIT$')
+            self.playerTwo.socket.send(b'PLAY$')
 
     """
     Returns an encoded byte-string of the player's Grid given in arg.
