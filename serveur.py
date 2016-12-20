@@ -162,13 +162,14 @@ Each command is managed server-side by a handling function.
 class Room:
     def __init__(self):
         self.games = [Game('northrend'), Game('lordaeron'), Game('kalimdor')]
-        self.users = [None]
+        self.users = []
 
     """
     Send information parsed in param to every users
     """
     def broadcast_all(self, data):
         msg = 'MSG ' + data + '$'
+        print(msg)
         for user in self.users:
             user.socket.send(msg.encode('utf-8'))
 
@@ -183,7 +184,7 @@ class Room:
                        ' Player 2: {}'.format(gameId,
                                               game.players[0].name,
                                               game.players[1].name))
-        broadcast_all('Une partie demarre à la table '+ gameId +' utilisez join <' + gameId +'> pour observer')
+        self.broadcast_all('Une partie demarre à la table '+ gameId +' utilisez join <' + gameId +'> pour observer')
 
     """
     Appends the user to the observator list of the game named gameId
@@ -204,13 +205,14 @@ class Room:
     Send the set of available commands to every users in the Room
     """
     def instructions(self, user):
-        msg = "- challenge <username> (défier un joueur)\n \
-        - join <game id>  (observer une partie en cours)\n \
-        - list games (lister les games)\n \
-        - list users\n \
+        msg = "Liste des commandes disponibles:\n\
+        - challenge <username> (défier un joueur)\n\
+        - join <game id>  (observer une partie en cours)\n\
+        - list games (lister les games)\n\
+        - list users\n\
         - nickname <name> (choisir un pseudo)"
         user.socket.send(bytearray("MSG " + msg + "$", "utf-8"))
-        user.socket.send('CMD$'.encode('utf-8'))
+        user.socket.send('CMD $'.encode('utf-8'))
 
     """
     Changes the user's name with newName and informs the other users
@@ -218,11 +220,11 @@ class Room:
     def change_username(self, user, newName):
         oldName = user.name
         for u in self.users:
-            if u.name == user.name:
+            if u.name == oldName:
                 u.name = newName
         print ('Client {} renamed {}'.format(oldName, newName))
-        broadcast_all(oldName+' a été renommé en '+newName)
-        user.socket.send('CMD$'.encode('utf-8'))
+        self.broadcast_all(oldName+' a été renommé en'+newName)
+        user.socket.send('CMD $'.encode('utf-8'))
 
     """
     Send to the user the list of ongoing/empty games
@@ -239,7 +241,7 @@ class Room:
         msg = msg + '$'
         print ('Sending the list of active games to {}'.format(user.name))
         user.socket.send(msg.encode('utf-8'))
-        user.socket.send('CMD$'.encode('utf-8'))
+        user.socket.send('CMD $'.encode('utf-8'))
 
     """
     Send to the asking user a list of the other users present in the Room
@@ -252,7 +254,7 @@ class Room:
         msg = msg + '$'
         print ('Sending the list of users to {}'.format(user.name))
         user.socket.send(msg.encode('utf-8'))
-        user.socket.send('CMD$'.encode('utf-8'))
+        user.socket.send('CMD $'.encode('utf-8'))
 
     def handler(self, data, user):
         command = data.decode("utf-8")
@@ -304,6 +306,8 @@ def start_server():
                             addr)
                 connection_list.append(user)
                 room.users.append(user)
+                print(room.users)
+                print(room.users[0].name)
                 room.instructions(user)
                 print ('New connection from {} {} '.format(user.name,
                                                            user.ip))
