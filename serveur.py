@@ -28,12 +28,12 @@ class User:
     # Necessary with select based TCP server
     def fileno(self):
         return self.socket.fileno()
-        
+
+
 """
 The class Game gives a few functions to help the server operate the room.
 Each game contains:
     - Two players
-    # TODO : player array and obs array
     - Three grids (P1, P2, Obs)
     - The next turn
 Each byte-message sent by the server to the clients is delimited with a $ sign.
@@ -142,17 +142,85 @@ class Game:
         return state
 
 
+"""
+The server contains only 1 Room where 3 games are hosted (by default).
+Each user is assigned to the room upon connection. They have access to a set
+of commands to :
+    - join an active game as observator
+    - get some info (list of users/active games)
+    - change nickname
+    - challenge an other user
+Each command is managed server-side by a handling function.
+"""
 class Room:
     def __init__(self):
-        self.games = [Game('game1'), Game('game2'), Game('game3')]
+        self.games = [Game('northrend'), Game('lordaeron'), Game('kalimdor')]
         self.users = [None]
 
-    # def instructions(self):
-    #     TODO instructions pour les users:
-    #     - join <room> (rejoindre une room)
-    #     - list games(lister les rooms)
-    #     - list users
-    #     - nickname <name> (choisir un pseudo
+    """
+    Send information parsed in param to every users
+    """
+    def broadcast_all(self, data):
+        msg = 'MSG ' + data + '$'
+        for user in self.users:
+            user.socket.send(msg.encode('utf-8'))
+
+    """
+    Informs the Room when a game starts
+    """
+    def game_started(self, gameId):
+        broadcast_all('Une partie demarre à la table '+ gameId +' utilisez join <' + gameId +'> pour observer')
+
+    """
+    Send the set of available commands to every users in the Room
+    """
+    def instructions(self):
+        msg = "- challenge <username> (défier un joueur)\n \
+        - join <game id>  (observer une partie en cours)\n \
+        - list games (lister les games)\n \
+        - list users\n \
+        - nickname <name> (choisir un pseudo)"
+        broadcast_all(msg)
+
+    """
+    Changes the user's name with newName and informs the other users
+    """
+    def change_username(self, user, newName):
+        oldName = user.name
+        for u in self.users:
+            if u.name == user.name:
+                u.name = newName
+        broadcast_all(oldName+' a été renommé en '+newName)
+
+    """
+    Send to the user the list of ongoing/empty games
+    """
+    def list_games(self, user):
+        msg = 'LISTG '
+        for game in self.games:
+            if game.players[P1] != None and game.players[P2] != None:
+                msg = msg + game.id + ','
+        msg = msg + ";"
+        for game in self.games:
+            if game.players[P1] == None and game.players[P2] == None:
+                msg = msg + game.id + ','
+        msg = msg + '$'
+        user.socket.send(msg.encode('utf-8'))
+
+    """
+    Send to the asking user a list of the other users present in the Room
+    """
+    def list_users(self, user):
+        msg = 'LISTU '
+        for u in self.users:
+            if u.name != user.name:
+                msg = msg + u.name + ','
+        msg = msg + '$'
+        user.socket.send(msg.encode('utf-8'))
+
+    def handler(self):
+        return
+
 
 
 def start_server():
