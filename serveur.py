@@ -210,6 +210,7 @@ class Room:
         - list users\n \
         - nickname <name> (choisir un pseudo)"
         user.socket.send(bytearray("MSG " + msg + "$", "utf-8"))
+        user.socket.send('CMD$'.encode('utf-8'))
 
     """
     Changes the user's name with newName and informs the other users
@@ -221,6 +222,7 @@ class Room:
                 u.name = newName
         print ('Client {} renamed {}'.format(oldName, newName))
         broadcast_all(oldName+' a été renommé en '+newName)
+        user.socket.send('CMD$'.encode('utf-8'))
 
     """
     Send to the user the list of ongoing/empty games
@@ -237,6 +239,7 @@ class Room:
         msg = msg + '$'
         print ('Sending the list of active games to {}'.format(user.name))
         user.socket.send(msg.encode('utf-8'))
+        user.socket.send('CMD$'.encode('utf-8'))
 
     """
     Send to the asking user a list of the other users present in the Room
@@ -249,6 +252,7 @@ class Room:
         msg = msg + '$'
         print ('Sending the list of users to {}'.format(user.name))
         user.socket.send(msg.encode('utf-8'))
+        user.socket.send('CMD$'.encode('utf-8'))
 
     def handler(self, data, user):
         command = data.decode("utf-8")
@@ -258,15 +262,15 @@ class Room:
             self.list_users(user)
         elif command.startswith("join "):
             gameID = command.strip("join ")
-            if gameID != "":
-                #Appel à join_game(gameID)
+            # if gameID != "":
+            #     #Appel à join_game(gameID)
         elif command.startswith("nickname "):
             newName = command.strip("nickname")
             if newName != "":
                 self.change_username(user, newName)
         elif command.startswith("challenge "):
             opponent = command.strip("challenge ")
-            if opponent != "":
+            # if opponent != "":
                 #Appel à challenge_user()
 
 
@@ -300,6 +304,7 @@ def start_server():
                             addr)
                 connection_list.append(user)
                 room.users.append(user)
+                room.instructions(user)
                 print ('New connection from {} {} '.format(user.name,
                                                            user.ip))
 
