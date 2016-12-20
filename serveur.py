@@ -42,6 +42,7 @@ class Game:
     def __init__(self, gameId):
         self.id = gameId
         self.players = [None, None]
+        self.observators = []
         self.grids = [Grid(), Grid(), Grid()]
         self.turn = -1
 
@@ -76,8 +77,11 @@ class Game:
         if player == J1:
             for cell in self.grids[P1].cells:
                 msg = msg + str(cell)
-        if player == J2:
+        elif player == J2:
             for cell in self.grids[P2].cells:
+                msg = msg + str(cell)
+        else:
+            for cell in self.grids[OBS].cells:
                 msg = msg + str(cell)
         msg = msg + '$'
         return msg.encode('utf-8')
@@ -118,6 +122,9 @@ class Game:
                     return
 
                 player.socket.send(self.encode_grid(i+1))
+                for obs in self.observators:
+                    observator.socket.send(self.encode_grid(0))
+
                 self.turn = enemy
 
                 if self.game_over() == -1:
@@ -169,7 +176,29 @@ class Room:
     Informs the Room when a game starts
     """
     def game_started(self, gameId):
+        for game in self.games:
+            if game.gameId is gameId:
+                print ('New game started in {}\n' \
+                       ' Player 1: {}\n'     \
+                       ' Player 2: {}'.format(gameId,
+                                              game.players[0].name,
+                                              game.players[1].name))
         broadcast_all('Une partie demarre à la table '+ gameId +' utilisez join <' + gameId +'> pour observer')
+
+    """
+    Appends the user to the observator list of the game named gameId
+    """
+    def join_game(self, user, gameId):
+        for game in self.games:
+            if game.gameId is gameId:
+                game.observators.append(user)
+                # Sending the observator grid upon connection
+                user.socket.send(game.encode_grid(0))
+        # Removing the user from the Room
+        self.users.remove(user)
+
+    # def challenge_user(self, userA, userB):
+    #     return
 
     """
     Send the set of available commands to every users in the Room
@@ -190,6 +219,7 @@ class Room:
         for u in self.users:
             if u.name == user.name:
                 u.name = newName
+        print ('Client {} renamed {}'.format(oldName, newName))
         broadcast_all(oldName+' a été renommé en '+newName)
 
     """
@@ -205,6 +235,7 @@ class Room:
             if game.players[P1] == None and game.players[P2] == None:
                 msg = msg + game.id + ','
         msg = msg + '$'
+        print ('Sending the list of active games to {}'.format(user.name))
         user.socket.send(msg.encode('utf-8'))
 
     """
@@ -216,9 +247,11 @@ class Room:
             if u.name != user.name:
                 msg = msg + u.name + ','
         msg = msg + '$'
+        print ('Sending the list of users to {}'.format(user.name))
         user.socket.send(msg.encode('utf-8'))
 
-    def handler(self):
+    def handler(self, user, data):
+
         return
 
 
