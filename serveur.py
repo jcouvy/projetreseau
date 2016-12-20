@@ -223,8 +223,8 @@ class Room:
             if u.name == oldName:
                 u.name = newName
         print ('Client {} renamed {}'.format(oldName, newName))
-        self.broadcast_all(oldName+' a été renommé en'+newName)
-        user.socket.send('CMD $'.encode('utf-8'))
+        self.broadcast_all(oldName+' a été renommé en '+newName)
+        user.socket.send('CMD$'.encode('utf-8'))
 
     """
     Send to the user the list of ongoing/empty games
