@@ -93,13 +93,14 @@ def execute(commands, grid, socket):
             #list = command.strip("LISTG ")
             list = command.replace("LISTG", "")
             game_types = list.split(';')
-            if game_types[0] != "":
+            if game_types[0] != ' ':
                 print("Liste des parties en cours : ")
                 games = game_types[0].split(',')
+
                 for game in games:
                     if game != "":
                         print(game)
-            elif game_types[1] != "":
+            elif game_types[1] != ' ':
                 print("Liste des parties libres : ")
                 games = game_types[1].split(',')
                 for game in games:
