@@ -169,6 +169,7 @@ class Room:
     """
     def broadcast_all(self, data):
         msg = 'MSG ' + data + '$'
+        print(msg)
         for user in self.users:
             user.socket.send(msg.encode('utf-8'))
 
@@ -204,10 +205,11 @@ class Room:
     Send the set of available commands to every users in the Room
     """
     def instructions(self, user):
-        msg = "- challenge <username> (défier un joueur)\n \
-        - join <game id>  (observer une partie en cours)\n \
-        - list games (lister les games)\n \
-        - list users\n \
+        msg = "Liste des commandes disponibles:\n\
+        - challenge <username> (défier un joueur)\n\
+        - join <game id>  (observer une partie en cours)\n\
+        - list games (lister les games)\n\
+        - list users\n\
         - nickname <name> (choisir un pseudo)"
         user.socket.send(bytearray("MSG " + msg + "$", "utf-8"))
         user.socket.send('CMD$'.encode('utf-8'))
@@ -218,11 +220,11 @@ class Room:
     def change_username(self, user, newName):
         oldName = user.name
         for u in self.users:
-            if u.name == user.name:
+            if u.name == oldName:
                 u.name = newName
         print ('Client {} renamed {}'.format(oldName, newName))
-        self.broadcast_all(oldName+' a été renommé en '+newName)
-        user.socket.send('CMD$'.encode('utf-8'))
+        self.broadcast_all(oldName+' a été renommé en'+newName)
+        user.socket.send('CMD $'.encode('utf-8'))
 
     """
     Send to the user the list of ongoing/empty games
@@ -307,6 +309,8 @@ def start_server():
                             addr)
                 connection_list.append(user)
                 room.users.append(user)
+                print(room.users)
+                print(room.users[0].name)
                 room.instructions(user)
                 print ('New connection from {} {} '.format(user.name,
                                                            user.ip))
