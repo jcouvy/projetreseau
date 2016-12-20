@@ -42,5 +42,7 @@ import sys
 if __name__ == '__main__':
     if len(sys.argv) == 1:
         start_server()
-    if len(sys.argv) == 2:
+    elif len(sys.argv) == 2:
         start_client(sys.argv[1])
+    else:
+        print("Usage : python3 tictactoe.py [server name or address if client]")
