@@ -87,3 +87,7 @@ def execute(commands, grid, socket):
                 if name != '':
                     print(name)
 
+        if command.startswith("MSG"):
+            message = command.strip("MSG ")
+            print(message)
+
