@@ -22,7 +22,7 @@ then the execute function handles the messages.
 def start_client(address):
     nickname = str(input("Indiquez votre nickname : "))
 
-    s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.connect((address, 8888))
     s.setblocking(True)
