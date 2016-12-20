@@ -108,3 +108,7 @@ def execute(commands, grid, socket):
             message = command.strip("MSG ")
             print(message)
 
+        if command.startswith("CMD"):
+            cmd = input("$> ")
+            socket.send(bytearray(cmd, "utf-8"))
+
