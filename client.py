@@ -79,13 +79,30 @@ def execute(commands, grid, socket):
         if command.startswith("OCCUPIED"):
             print("La case que vous souhaitiez jouer est occupée. Veuillez en sélectionner une autre.")
 
-        if command.startswith("LIST"):
-            list = command.strip("LIST ")
+        if command.startswith("LISTU"):
+            list = command.strip("LISTU ")
             usernames = list.split(',')
             print("Liste des utilisateurs : ")
             for name in usernames:
-                if name != '':
+                if name != "":
                     print(name)
+
+        if command.startswith("LISTG"):
+            list = command.strip("LISTG ")
+            game_types = list.split(';')
+            if game_types[0] != "":
+                print("Liste des parties en cours : ")
+                games = game_types[0].split(',')
+                for game in games:
+                    if game != "":
+                        print(game)
+            elif game_types[1] != "":
+                print("Liste des parties libres : ")
+                games = game_types[1].split(',')
+                for game in games:
+                    if game != "":
+                        print(game)
+
 
         if command.startswith("MSG"):
             message = command.strip("MSG ")
