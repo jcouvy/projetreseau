@@ -49,7 +49,8 @@ This function handles the different messages sent from the server.
 def execute(commands, grid, socket):
     for command in commands:
         if command.startswith("GRID "):
-            command = command.strip("GRID ")
+            #command = command.strip("GRID ")
+            command = command.replace("GRID ", "")
 
             for i in range(9):
                 grid.cells[i] = int(command[i])
@@ -80,7 +81,8 @@ def execute(commands, grid, socket):
             print("La case que vous souhaitiez jouer est occupée. Veuillez en sélectionner une autre.")
 
         if command.startswith("LISTU"):
-            list = command.strip("LISTU ")
+            #list = command.strip("LISTU ")
+            list = command.replace("LISTU", "")
             usernames = list.split(',')
             print("Liste des utilisateurs : ")
             for name in usernames:
@@ -88,7 +90,8 @@ def execute(commands, grid, socket):
                     print(name)
 
         if command.startswith("LISTG"):
-            list = command.strip("LISTG ")
+            #list = command.strip("LISTG ")
+            list = command.replace("LISTG", "")
             game_types = list.split(';')
             if game_types[0] != "":
                 print("Liste des parties en cours : ")
@@ -105,7 +108,8 @@ def execute(commands, grid, socket):
 
 
         if command.startswith("MSG"):
-            message = command.strip("MSG ")
+            #message = command.strip("MSG")
+            message = command.replace("MSG ", "")
             print(message)
 
         if command.startswith("CMD"):

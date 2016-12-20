@@ -123,7 +123,7 @@ class Game:
 
                 player.socket.send(self.encode_grid(i+1))
                 for obs in self.observators:
-                    observator.socket.send(self.encode_grid(0))
+                    obs.socket.send(self.encode_grid(0))
 
                 self.turn = enemy
 
@@ -162,7 +162,7 @@ Each command is managed server-side by a handling function.
 class Room:
     def __init__(self):
         self.games = [Game('northrend'), Game('lordaeron'), Game('kalimdor')]
-        self.users = [None]
+        self.users = []
 
     """
     Send information parsed in param to every users
@@ -183,7 +183,7 @@ class Room:
                        ' Player 2: {}'.format(gameId,
                                               game.players[0].name,
                                               game.players[1].name))
-        broadcast_all('Une partie demarre à la table '+ gameId +' utilisez join <' + gameId +'> pour observer')
+        self.broadcast_all('Une partie demarre à la table '+ gameId +' utilisez join <' + gameId +'> pour observer')
 
     """
     Appends the user to the observator list of the game named gameId
@@ -221,7 +221,7 @@ class Room:
             if u.name == user.name:
                 u.name = newName
         print ('Client {} renamed {}'.format(oldName, newName))
-        broadcast_all(oldName+' a été renommé en '+newName)
+        self.broadcast_all(oldName+' a été renommé en '+newName)
         user.socket.send('CMD$'.encode('utf-8'))
 
     """
@@ -261,15 +261,18 @@ class Room:
         elif command == "list users":
             self.list_users(user)
         elif command.startswith("join "):
-            gameID = command.strip("join ")
+            #gameID = command.strip("join ")
+            gameID = command.replace("join ", "")
             # if gameID != "":
             #     #Appel à join_game(gameID)
         elif command.startswith("nickname "):
-            newName = command.strip("nickname")
+            #newName = command.strip("nickname ")
+            newName = command.replace("nickname ", "")
             if newName != "":
                 self.change_username(user, newName)
         elif command.startswith("challenge "):
-            opponent = command.strip("challenge ")
+            #opponent = command.strip("challenge ")
+            opponent = command.replace("challenge ", "")
             # if opponent != "":
                 #Appel à challenge_user()
 
