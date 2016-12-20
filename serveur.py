@@ -10,6 +10,7 @@ from grid import *
 
 P1  = 0
 P2  = 1
+OBS = 2
 
 """
 Each user (new socket) is defined by 3 arguments:
@@ -27,6 +28,7 @@ class User:
     # Necessary with select based TCP server
     def fileno(self):
         return self.socket.fileno()
+        
 """
 The class Game gives a few functions to help the server operate the room.
 Each game contains:
@@ -39,13 +41,8 @@ Each byte-message sent by the server to the clients is delimited with a $ sign.
 class Game:
     def __init__(self, gameId):
         self.id = gameId
-        # self.playerOne = None
-        # self.playerTwo = None
         self.players = [None, None]
         self.grids = [Grid(), Grid(), Grid()]
-        # self.gridOne = Grid()
-        # self.gridTwo = Grid()
-        # self.gridObs = Grid()
         self.turn = -1
 
     """
@@ -53,15 +50,11 @@ class Game:
     The first turn is chosen with a pseudo random coin-flip.
     """
     def start(self, playerA, playerB):
-        # self.playerOne = playerA
-        # self.playerTwo = playerB
         self.players = [playerA, playerB]
         self.turn = random.randint(1,2)
 
-        # self.playerOne.socket.send(b'GRID 000000000$')
-        # self.playerTwo.socket.send(b'GRID 000000000$')
-        self.players[0].socket.send(b'GRID 000000000$')
-        self.players[1].socket.send(b'GRID 000000000$')
+        self.players[P1].socket.send(b'GRID 000000000$')
+        self.players[P2].socket.send(b'GRID 000000000$')
 
     """
     Send the next turn in a byte-string to each player.
@@ -69,15 +62,11 @@ class Game:
     def send_turn(self):
         assert(self.turn == J1 or self.turn == J2)
         if self.turn == J1:
-            # self.playerOne.socket.send(b'PLAY$')
-            # self.playerTwo.socket.send(b'WAIT$')
-            self.players[0].socket.send(b'PLAY$')
-            self.players[1].socket.send(b'WAIT$')
+            self.players[P1].socket.send(b'PLAY$')
+            self.players[P2].socket.send(b'WAIT$')
         else:
-            # self.playerOne.socket.send(b'WAIT$')
-            # self.playerTwo.socket.send(b'PLAY$')
-            self.players[0].socket.send(b'WAIT$')
-            self.players[1].socket.send(b'PLAY$')
+            self.players[P1].socket.send(b'WAIT$')
+            self.players[P2].socket.send(b'PLAY$')
 
     """
     Returns an encoded byte-string of the player's Grid given in arg.
@@ -85,12 +74,10 @@ class Game:
     def encode_grid(self, player):
         msg = "GRID "
         if player == J1:
-            for cell in self.grids[0].cells:
-            # for cell in self.gridOne.cells:
+            for cell in self.grids[P1].cells:
                 msg = msg + str(cell)
         if player == J2:
-            for cell in self.grids[1].cells:
-            # for cell in self.gridTwo.cells:
+            for cell in self.grids[P2].cells:
                 msg = msg + str(cell)
         msg = msg + '$'
         return msg.encode('utf-8')
@@ -109,101 +96,49 @@ class Game:
             player.socket.send(b'PLAY$')
             return
 
+        # Each turn is either J1 = 1 or J2 = 2 while P1 is in players[0] and
+        # P2 in players[1].
         for i in range (2):
             if self.turn == (i+1) and player is self.players[i]:
-                enemy = J2 if (i % 2) == 0 else J1
+                enemy = J2 if (i == P1) else J1
                 try:
-                    print(self.grids[i].cells)
                     self.grids[OBS].play(i+1, cellNum)
-                    self.grids[CURRENT_PLAYER].play(i+1, cellNum)
-                    print(self.grids[i].cells)
+                    self.grids[i].play(i+1, cellNum)
 
                 except AssertionError:
                     if (cellNum < 0 or cellNum >= NB_CELLS):
                         player.socket.send(b'INVALID$')
 
-                    elif (self.grids[2].cells[cellNum] == enemy):
+                    elif (self.grids[OBS].cells[cellNum] == enemy):
                         self.grids[i].cells[cellNum] = enemy
-                        player.socket.send(self.encode_grid(i))
+                        player.socket.send(self.encode_grid(i+1))
                         player.socket.send(b'OCCUPIED$')
 
                     player.socket.send(b'PLAY$')
                     return
 
-                player.socket.send(self.encode_grid(enemy))
-                self.turn = J2 if (i % 2) == 0 else J1
+                player.socket.send(self.encode_grid(i+1))
+                self.turn = enemy
 
-
-        # if self.turn == J1 and player is self.playerOne:
-        #     try:
-        #         print(self.gridOne.cells)
-        #         self.gridObs.play(J1, cellNum)
-        #         self.gridOne.play(J1, cellNum)
-        #         print(self.gridOne.cells)
-        #
-        #     except AssertionError:
-        #         if (cellNum < 0 or cellNum >= NB_CELLS):
-        #             player.socket.send(b'INVALID$')
-        #
-        #         elif (self.gridObs.cells[cellNum] == J2):
-        #             self.gridOne.cells[cellNum] = J2
-        #             player.socket.send(self.encode_grid(J1))
-        #             player.socket.send(b'OCCUPIED$')
-        #
-        #         player.socket.send(b'PLAY$')
-        #         return
-        #
-        #     player.socket.send(self.encode_grid(J1))
-        #     self.turn = J2
-        #
-        # elif self.turn == J2 and player is self.playerTwo:
-        #     try:
-        #         print(self.gridTwo.cells)
-        #         self.gridObs.play(J2, cellNum)
-        #         self.gridTwo.play(J2, cellNum)
-        #         print(self.gridTwo.cells)
-        #
-        #     except AssertionError:
-        #         if (cellNum < 0 or cellNum >= NB_CELLS):
-        #             player.socket.send(b'INVALID$')
-        #
-        #         elif (self.gridObs.cells[cellNum] == J1):
-        #             self.gridTwo.cells[cellNum] = J1
-        #             player.socket.send(self.encode_grid(J2))
-        #             player.socket.send(b'OCCUPIED$')
-        #
-        #         player.socket.send(b'PLAY$')
-        #         return
-        #
-        #     player.socket.send(self.encode_grid(J2))
-        #     self.turn = J1
-
-        if self.game_over() == -1:
-            self.send_turn()
-        print ('Sending encoded grid to {}'.format(player.name))
+                if self.game_over() == -1:
+                    self.send_turn()
+                print ('Sending encoded grid to {}'.format(player.name))
 
     """
     Checks if the game is over (if a win condition is found on the global Grid).
     Send a byte-string to each players according to the output of the game.
     """
     def game_over(self):
-        # state = self.gridObs.gameOver()
-        state = self.grids[2].gameOver()
+        state = self.grids[OBS].gameOver()
         if state == EMPTY:
-            # self.playerOne.socket.send(b'DRAW$')
-            # self.playerTwo.socket.send(b'DRAW$')
-            self.players[0].socket.send(b'DRAW$')
-            self.players[1].socket.send(b'DRAW$')
+            self.players[P1].socket.send(b'DRAW$')
+            self.players[P2].socket.send(b'DRAW$')
         if state == J1:
-            # self.playerOne.socket.send(b'WIN$')
-            # self.playerTwo.socket.send(b'LOSE$')
-            self.players[0].socket.send(b'WIN$')
-            self.players[1].socket.send(b'LOSE$')
+            self.players[P1].socket.send(b'WIN$')
+            self.players[P2].socket.send(b'LOSE$')
         if state == J2:
-            # self.playerTwo.socket.send(b'WIN$')
-            # self.playerOne.socket.send(b'LOSE$')
-            self.players[0].socket.send(b'LOSE$')
-            self.players[1].socket.send(b'WIN$')
+            self.players[P1].socket.send(b'LOSE$')
+            self.players[P2].socket.send(b'WIN$')
         return state
 
 
@@ -275,11 +210,6 @@ def start_server():
                                 print('Received data from {}'.format(client.name))
                                 game.handler(client, data)
 
-                    # if client == game.playerOne or client == game.playerTwo:
-                    #     print('Received data from {}'.format(client.name))
-                    #     game.handler(client, data)
-                    # else:
-                    #     print ('Received data from client')
                 else:
                     print ('Client {} ({}) disconnected'.format(client.name,
                                                                 client.ip))
