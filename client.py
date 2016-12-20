@@ -22,7 +22,7 @@ then the execute function handles the messages.
 def start_client(address):
     nickname = str(input("Indiquez votre nickname : "))
 
-    s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.connect((address, 8888))
     s.setblocking(True)
@@ -78,3 +78,16 @@ def execute(commands, grid, socket):
 
         if command.startswith("OCCUPIED"):
             print("La case que vous souhaitiez jouer est occupée. Veuillez en sélectionner une autre.")
+
+        if command.startswith("LIST"):
+            list = command.strip("LIST ")
+            usernames = list.split(',')
+            print("Liste des utilisateurs : ")
+            for name in usernames:
+                if name != '':
+                    print(name)
+
+        if command.startswith("MSG"):
+            message = command.strip("MSG ")
+            print(message)
+
