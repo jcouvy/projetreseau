@@ -40,22 +40,42 @@ Each byte-message sent by the server to the clients is delimited with a $ sign.
 """
 class Game:
     def __init__(self, gameId):
-        self.id = gameId
+        self.gameId = gameId
         self.players = [None, None]
         self.observators = []
         self.grids = [Grid(), Grid(), Grid()]
         self.turn = -1
 
+
+    def play(self, observator):
+        if self.players[P1] != None and self.players[P2] != None:
+            obs.socket.send(b'MSG Partie en cours$')
+            return
+
+        for i in range(2):
+            if self.players[i] == None:
+                self.players[i] = observator
+                print ('{} is player {}'.format(observator.name, i+1))
+                print(self.players)
+                print(self.players[P1])
+                print(self.players[P2])
+                if self.players[P1] != None and self.players[P2] != None:
+                    print('IN LOOP')
+                    self.start()
+                observator.socket.send(b'MSG En attente d\'un adversaire$')
+                return
+
     """
     Fills the Game structure and sends a byte message encoding each player's grid.
     The first turn is chosen with a pseudo random coin-flip.
     """
-    def start(self, playerA, playerB):
-        self.players = [playerA, playerB]
+    def start(self):
+        # self.players = [playerA, playerB]
         self.turn = random.randint(1,2)
 
         self.players[P1].socket.send(b'GRID 000000000$')
         self.players[P2].socket.send(b'GRID 000000000$')
+        self.send_turn()
 
     """
     Send the next turn in a byte-string to each player.
@@ -191,15 +211,12 @@ class Room:
     """
     def join_game(self, user, gameId):
         for game in self.games:
-            if game.gameId is gameId:
+            if game.gameId == gameId:
                 game.observators.append(user)
-                # Sending the observator grid upon connection
-                user.socket.send(game.encode_grid(0))
+                game.play(game.observators[0])
         # Removing the user from the Room
+        print ('Removing {} from Room\'s userlist'.format(user.name))
         self.users.remove(user)
-
-    # def challenge_user(self, userA, userB):
-    #     return
 
     """
     Send the set of available commands to every users in the Room
@@ -263,24 +280,23 @@ class Room:
         elif command == "list users":
             self.list_users(user)
         elif command.startswith("join "):
-            #gameID = command.strip("join ")
-            gameID = command.replace("join ", "")
-            # if gameID != "":
-            #     #Appel à join_game(gameID)
+            gameId = command.replace("join ", "")
+            self.join_game(user, gameId)
         elif command.startswith("nickname "):
-            #newName = command.strip("nickname ")
             newName = command.replace("nickname ", "")
             if newName != "":
                 self.change_username(user, newName)
-        elif command.startswith("challenge "):
-            #opponent = command.strip("challenge ")
-            opponent = command.replace("challenge ", "")
+        # elif command.startswith("challenge "):
+        #     opponent = command.replace("challenge ", "")
             # if opponent != "":
                 #Appel à challenge_user()
-        else:
-            msg = "Commande inconnue."
-            user.socket.send(bytearray("MSG " + msg + "$", "utf-8"))
-            user.socket.send('CMD$'.encode('utf-8'))
+
+    # $> challenge username
+    # serveur: si username dans room.users
+    # -> MSG usernameA te défie est ce que tu veux ?
+    # def challenge_user(self, userA, userB):
+    #
+    #     return
 
 
 
