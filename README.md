@@ -11,13 +11,12 @@ URL: http://dept-info.labri.fr/~thibault/Reseau/sujet.pdf
 - Fonctions principales de jeu [✓]
 - Affichage côté client [✓]
 - Gestion des erreurs d'entrée côté client [✓]
+- Choix d'un pseudonyme [✓]
 - Instructions fin de partie [✗]
 
 ## Extension
-- Choix d'un pseudonyme [~]
 - Observateurs [~]
-- Salon de jeux (parties simultanées) [✗]
+- Salon de jeux (parties simultanées) [~]
 - Tableau de score [✗]
 - Gestion deconnexion joueur pdt partie [✗]
-- Gestion des joueurs suivants [✗]
-
+- Input/read multithread [✗]
