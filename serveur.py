@@ -47,22 +47,24 @@ class Game:
         self.turn = -1
 
 
-    def play(self, observator):
+    def playing(self, observator):
         if self.players[P1] != None and self.players[P2] != None:
             obs.socket.send(b'MSG Partie en cours$')
             return
 
         for i in range(2):
             if self.players[i] == None:
+                # Append the client to the player array and remove it from
+                # the observators.
                 self.players[i] = observator
-                print ('{} is player {}'.format(observator.name, i+1))
-                print(self.players)
-                print(self.players[P1])
-                print(self.players[P2])
+                self.observators.remove(observator)
                 if self.players[P1] != None and self.players[P2] != None:
-                    print('IN LOOP')
+                    msg = 'MSG La partie commence !\n Joueur 1 - '+self.players[P1].name+' O\n Joueur 2 - '+self.players[P2].name+' X\n$'
+                    self.players[P1].socket.send(msg.encode('utf-8'))
+                    self.players[P2].socket.send(msg.encode('utf-8'))
                     self.start()
-                observator.socket.send(b'MSG En attente d\'un adversaire$')
+                    return
+                observator.socket.send(b'MSG En attente d\'un adversaire...$')
                 return
 
     """
@@ -194,26 +196,16 @@ class Room:
             user.socket.send(msg.encode('utf-8'))
 
     """
-    Informs the Room when a game starts
-    """
-    def game_started(self, gameId):
-        for game in self.games:
-            if game.gameId is gameId:
-                print ('New game started in {}\n' \
-                       ' Player 1: {}\n'     \
-                       ' Player 2: {}'.format(gameId,
-                                              game.players[0].name,
-                                              game.players[1].name))
-        self.broadcast_all('Une partie demarre à la table '+ gameId +' utilisez join <' + gameId +'> pour observer')
-
-    """
     Appends the user to the observator list of the game named gameId
     """
     def join_game(self, user, gameId):
         for game in self.games:
             if game.gameId == gameId:
+                print('APPEND {} TO :'.format(user.name))
+                print(game.observators)
                 game.observators.append(user)
-                game.play(game.observators[0])
+                print(game.observators)
+                game.playing(game.observators[0])
         # Removing the user from the Room
         print ('Removing {} from Room\'s userlist'.format(user.name))
         self.users.remove(user)
@@ -227,7 +219,7 @@ class Room:
         - join <game id>  (observer une partie en cours)\n\
         - list games (lister les games)\n\
         - list users\n\
-        - nickname <name> (choisir un pseudo)"
+        - nickname <name> (choisir un pseudo)\n"
         user.socket.send(bytearray("MSG " + msg + "$", "utf-8"))
         user.socket.send('CMD$'.encode('utf-8'))
 
@@ -250,11 +242,11 @@ class Room:
         msg = 'LISTG '
         for game in self.games:
             if game.players[P1] != None and game.players[P2] != None:
-                msg = msg + game.id + ','
+                msg = msg + game.gameId + ','
         msg = msg + ";"
         for game in self.games:
             if game.players[P1] == None and game.players[P2] == None:
-                msg = msg + game.id + ','
+                msg = msg + game.gameId + ','
         msg = msg + '$'
         print ('Sending the list of active games to {}'.format(user.name))
         user.socket.send(msg.encode('utf-8'))
@@ -273,7 +265,7 @@ class Room:
         user.socket.send(msg.encode('utf-8'))
         user.socket.send('CMD$'.encode('utf-8'))
 
-    def handler(self, data, user):
+    def handler(self, user, data):
         command = data.decode("utf-8")
         if command == "list games":
             self.list_games(user)
@@ -286,20 +278,36 @@ class Room:
             newName = command.replace("nickname ", "")
             if newName != "":
                 self.change_username(user, newName)
-        # elif command.startswith("challenge "):
-        #     opponent = command.replace("challenge ", "")
-            # if opponent != "":
-                #Appel à challenge_user()
-
-    # $> challenge username
-    # serveur: si username dans room.users
-    # -> MSG usernameA te défie est ce que tu veux ?
-    # def challenge_user(self, userA, userB):
-    #
-    #     return
 
 
+"""
+There are three different handlers for each client's type:
+class Game - observator (watching a game)
+class Game - player (playing in a game)
+class Room - user (not in any game)
+Each handler is called by the server depending on the socket type
+"""
+def pick_handler(room, client, data):
+    for user in room.users:
+        if client == user :
+            room.handler(client, data)
+            return
 
+    for game in room.games:
+        for player in game.players:
+            if client is player:
+                print('Received data from {}'.format(client.name))
+                game.handler(client, data)
+                return
+
+        #TODO observator handler
+
+"""
+Starts a TCP server on port 8888 accepting IPv4 connections.
+The server starts a single Room that hosts multiple game lobbies. When
+connecting, a user is appended to the Room's user list and managed according to
+his status (user, player, obs).
+"""
 def start_server():
 
     HOST = ''
@@ -329,33 +337,14 @@ def start_server():
                             addr)
                 connection_list.append(user)
                 room.users.append(user)
-                print(room.users)
-                print(room.users[0].name)
                 room.instructions(user)
                 print ('New connection from {} {} '.format(user.name,
                                                            user.ip))
 
-                # if (len(connection_list) - 1) == 2:
-                #     room.games[0].start(connection_list[1], connection_list[2])
-                #     room.games[0].send_turn()
-                #     print ('New game started \n' \
-                #            ' Player 1: {}\n'     \
-                #            ' Player 2: {}'.format(room.games[0].players[0].name,
-                #                                   room.games[0].players[1].name))
-
             else:
                 data = client.socket.recv(RECV_BUFFER)
                 if data:
-                    for user in room.users:
-                        if client == user :
-                            room.handler(data, client)
-
-                    for game in room.games:
-                        for player in game.players:
-                            if client is player:
-                                print('Received data from {}'.format(client.name))
-                                game.handler(client, data)
-
+                    pick_handler(room, client, data)
                 else:
                     print ('Client {} ({}) disconnected'.format(client.name,
                                                                 client.ip))
