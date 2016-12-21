@@ -41,6 +41,7 @@ Wait for user input and send to the server.
 def prompt(socket):
     cmd = input()
     socket.send(bytearray(cmd, "utf-8"))
+    print('')
 
 """
 This function handles the different messages sent from the server.
@@ -86,6 +87,7 @@ def execute(commands, grid, socket):
             for name in usernames:
                 if name != "":
                     print(name)
+            print('')
 
         if command.startswith("LISTG"):
             list = command.replace("LISTG", "")
@@ -103,6 +105,7 @@ def execute(commands, grid, socket):
                 for game in games:
                     if game != "":
                         print(game)
+            print('')
 
 
         if command.startswith("MSG"):
