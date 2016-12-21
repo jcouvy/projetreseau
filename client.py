@@ -18,16 +18,12 @@ then the execute function handles the messages.
 
 """
 def start_client(address):
-    nickname = str(input("Indiquez votre nickname : "))
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.connect((address, 8888))
     s.setblocking(True)
     grid = Grid()
-
-    if nickname:
-        s.send(bytearray("NICK " + nickname, "utf-8"))
 
     while True:
         s_to_read, _, _ = select.select([s], [], [])
