@@ -4,12 +4,12 @@ from grid import *
 The Termios import is used to flush the wild inputs that can interfere with the game.
 It works only on UNIX systems.
 """
-
 from termios import tcflush, TCIFLUSH
 
 import sys
 import socket
 import select
+from threading import Thread
 
 """
 The client socket is created and the connection to the server is made.
@@ -17,8 +17,6 @@ In the infinite loop, the protocol messages are received, split if necessary,
 then the execute function handles the messages.
 
 """
-
-
 def start_client(address):
     nickname = str(input("Indiquez votre nickname : "))
 
@@ -40,21 +38,26 @@ def start_client(address):
             commands = str_message.split('$')
             execute(commands, grid, tmp_s)
 
+
+"""
+Wait for user input and send to the server.
+"""
+def prompt(socket):
+    cmd = input("")
+    socket.send(bytearray(cmd, "utf-8"))
+
 """
 This function handles the different messages sent from the server.
 
 """
-
-
 def execute(commands, grid, socket):
+
     for command in commands:
         if command.startswith("GRID "):
-            #command = command.strip("GRID ")
             command = command.replace("GRID ", "")
 
             for i in range(9):
                 grid.cells[i] = int(command[i])
-
             grid.display()
 
         if command.startswith("PLAY"):
@@ -81,7 +84,6 @@ def execute(commands, grid, socket):
             print("La case que vous souhaitiez jouer est occupée. Veuillez en sélectionner une autre.")
 
         if command.startswith("LISTU"):
-            #list = command.strip("LISTU ")
             list = command.replace("LISTU", "")
             usernames = list.split(',')
             print("Liste des utilisateurs : ")
@@ -90,7 +92,6 @@ def execute(commands, grid, socket):
                     print(name)
 
         if command.startswith("LISTG"):
-            #list = command.strip("LISTG ")
             list = command.replace("LISTG", "")
             game_types = list.split(';')
             if game_types[0] != ' ':
@@ -109,11 +110,14 @@ def execute(commands, grid, socket):
 
 
         if command.startswith("MSG"):
-            #message = command.strip("MSG")
             message = command.replace("MSG ", "")
             print(message)
 
+        """
+        Creates a thread to split input and output streams
+        Each client will be able to have an input prompt while receiving
+        the server's broadcasts
+        """
         if command.startswith("CMD"):
-            cmd = input("$> ")
-            socket.send(bytearray(cmd, "utf-8"))
-
+            thread = Thread(target=prompt, args=(socket,))
+            thread.start()
