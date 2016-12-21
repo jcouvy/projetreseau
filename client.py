@@ -29,7 +29,7 @@ def start_client(address):
         s_to_read, _, _ = select.select([s], [], [])
         for tmp_s in s_to_read:
             server_msg = tmp_s.recv(4096)
-            print(server_msg)
+            #print(server_msg)
             str_message = server_msg.decode("utf-8")
             commands = str_message.split('$')
             execute(commands, grid, tmp_s)
@@ -39,7 +39,7 @@ def start_client(address):
 Wait for user input and send to the server.
 """
 def prompt(socket):
-    cmd = input("")
+    cmd = input()
     socket.send(bytearray(cmd, "utf-8"))
 
 """

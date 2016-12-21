@@ -277,6 +277,10 @@ class Room:
             opponent = command.replace("challenge ", "")
             # if opponent != "":
                 #Appel à challenge_user()
+        else:
+            msg = "Commande inconnue."
+            user.socket.send(bytearray("MSG " + msg + "$", "utf-8"))
+            user.socket.send('CMD$'.encode('utf-8'))
 
 
 
