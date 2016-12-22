@@ -40,6 +40,9 @@ Wait for user input and send to the server.
 """
 def prompt(socket):
     cmd = input()
+    if not cmd.strip():
+        print ('Vous devez entrer une commande')
+        cmd = input()
     socket.send(bytearray(cmd, "utf-8"))
     print('')
 

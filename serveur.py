@@ -312,7 +312,9 @@ class Room:
             newName = command.replace("nickname ", "")
             if newName != "":
                 self.change_username(user, newName)
-
+        else:
+            user.socket.send('MSG Commande Inconnue !$'.encode('utf-8'))
+            user.socket.send('CMD$'.encode('utf-8'))
 
 """
 There are three different handlers for each client's type:
