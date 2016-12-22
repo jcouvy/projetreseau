@@ -215,7 +215,6 @@ class Game:
         end_msg = "Vous avez été replacé parmi les observateurs, entrez la commande <play> pour pouvoir rejouer."
 
         self.observators.append(self.players[P1])
-
         self.players[P1].socket.send(bytearray("MSG " + end_msg + "$", "utf-8"))
         self.players[P1].socket.send(b'CMD$')
         self.players[P1] = None
@@ -365,11 +364,25 @@ def pick_handler(room, client, data):
                 game.obs_handler(client, data)
 
 
-def disconnection_routine():
-    print("YOLO")
-    disconnection_timer = None
-    #forfeit()
+def forfeit(game):
+    for player in game.players:
+        if player:
+            game.observators.append(player)
+            game.players[P1] = None
+            game.players[P2] = None
+    msg = 'MSG Vous avez gagné par forfait$'
+    player.socket.send(msg.encode('utf-8'))
+    msg = 'MSG Vous avez été replacé parmi les observateurs, entrez la commande <play> pour pouvoir rejouer.$'
+    player.socket.send(msg.encode('utf-8'))
+    player.socket.send(b'CMD$')
 
+def disconnection_routine(reconnection_list, game):
+    print("Timeout")
+    disconnection_timer = None
+    forfeit(game)
+    for element in reconnection_list:
+        if element[0] == game.gameId:
+            reconnection_list.remove(element)
 
 """
 Starts a TCP server on port 8888 accepting IPv4 connections.
@@ -454,11 +467,11 @@ def start_server():
                                         enemy = P1 if i == P2 else P2
                                         game.players[i] = None
                                         reconnection_list.append((game.gameId, client.ip, i+1))
-                                        disconnection_timer = Timer(20.0, disconnection_routine)
+                                        disconnection_timer = Timer(20.0, disconnection_routine, args=(reconnection_list, game,))
                                         disconnection_timer.start()
                                         disconnection_msg = "MSG Votre adversaire s'est déconnecté... Veuillez patienter.$"
                                         game.players[enemy].socket.send(bytearray(disconnection_msg, "utf-8"))
-                                        
+
                     connection_list.remove(client)
                     client.socket.close()
 
