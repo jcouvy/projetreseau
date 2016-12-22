@@ -167,6 +167,8 @@ class Game:
 
                 if self.game_over() == -1:
                     self.send_turn()
+                else:
+                    self.end_game()
                 print ('Sending encoded grid to {}'.format(player.name))
 
     """
@@ -186,6 +188,21 @@ class Game:
             self.players[P2].socket.send(b'WIN$')
         return state
 
+
+
+    def end_game(self):
+        end_msg = "Vous avez été replacé parmi les observateurs, entrez la commande <play> pour pouvoir rejouer."
+
+        self.observators.append(self.players[P1])
+
+        self.players[P1].socket.send(bytearray("MSG " + end_msg + "$", "utf-8"))
+        self.players[P1].socket.send(b'CMD$')
+        self.players[P1] = None
+
+        self.observators.append(self.players[P2])
+        self.players[P2].socket.send(bytearray("MSG " + end_msg + "$", "utf-8"))
+        self.players[P2].socket.send(b'CMD$')
+        self.players[P2] = None
 
 """
 The server contains only 1 Room where 3 games are hosted (by default).
