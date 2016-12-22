@@ -12,11 +12,11 @@ URL: http://dept-info.labri.fr/~thibault/Reseau/sujet.pdf
 - Affichage côté client [✓]
 - Gestion des erreurs d'entrée côté client [✓]
 - Choix d'un pseudonyme [✓]
-- Input/read multithread [✓]
-- Instructions fin de partie [✗]
 
 ## Extension
-- Observateurs [~]
-- Salon de jeux (parties simultanées) [~]
+- Input/read multithread [✓]
+- Instructions fin de partie [✓]
+- Observateurs [✓]
+- Salon de jeux (parties simultanées) [✓]
 - Tableau de score [✗]
 - Gestion deconnexion joueur pdt partie [✗]
