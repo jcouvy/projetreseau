@@ -124,6 +124,7 @@ class Game:
         #elif command is "quit":
         else:
             observator.socket.send(b'MSG Commande inconnue$')
+            observator.socket.send(b'CMD$')
 
 
     """
@@ -200,7 +201,10 @@ class Game:
         return state
 
 
-
+    """
+    This function is called when a game is over, changes players into observators,
+    and give them a prompt to enter observators commands.
+    """
     def end_game(self):
         end_msg = "Vous avez été replacé parmi les observateurs, entrez la commande <play> pour pouvoir rejouer."
 
@@ -310,6 +314,10 @@ class Room:
         user.socket.send(msg.encode('utf-8'))
         user.socket.send('CMD$'.encode('utf-8'))
 
+
+    """
+    Handles the messages coming from users in the Room, and then call the appropriate function.
+    """
     def handler(self, user, data):
         command = data.decode("utf-8")
         if command == "list games":
@@ -399,6 +407,7 @@ def start_server():
                                                                 client.ip))
                     connection_list.remove(client)
                     client.socket.close()
+
 
 if __name__ == '__main__':
     sys.exit(start_server())

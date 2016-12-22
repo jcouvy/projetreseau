@@ -29,7 +29,7 @@ def start_client(address):
         s_to_read, _, _ = select.select([s], [], [])
         for tmp_s in s_to_read:
             server_msg = tmp_s.recv(4096)
-            print(server_msg)
+            #print(server_msg)
             str_message = server_msg.decode("utf-8")
             commands = str_message.split('$')
             execute(commands, grid, tmp_s)
@@ -85,13 +85,14 @@ def execute(commands, grid, socket):
             print("La case que vous souhaitiez jouer est occupée. Veuillez en sélectionner une autre.")
 
         if command.startswith("LISTU"):
-            list = command.replace("LISTU", "")
+            list = command.replace("LISTU ", "")
             usernames = list.split(',')
-            print("Liste des utilisateurs : ")
-            for name in usernames:
-                if name != "":
-                    print(name)
-            print('')
+            if len(usernames) != 0:
+                print("Liste des utilisateurs : ")
+                for name in usernames:
+                    if name != "":
+                        print(name)
+                print('')
 
         if command.startswith("LISTG"):
             list = command.replace("LISTG", "")
