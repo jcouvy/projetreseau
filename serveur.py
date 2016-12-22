@@ -370,7 +370,7 @@ def pick_handler(room, client, data):
 
 def disconnection_routine():
     print("YOLO")
-
+    disconnection_timer = None
     #forfeit()
 
 
@@ -399,6 +399,7 @@ def start_server():
     room = Room()
     disconnection_timer = None
     wait = []
+    need_to_be_reconnected = None
 
     while True:
         read_sockets, _ , _ = select.select(connection_list, [], [])
@@ -410,11 +411,12 @@ def start_server():
                             'Guest'+str(random.randint(0,9999)),
                             addr[0])
                 print(wait)
+                need_to_be_reconnected = False
                 for waiting_ip in wait:
                     if user.ip == waiting_ip[1]:
-                        if disconnection_timer != None:
+                        if disconnection_timer != None and disconnection_timer.isAlive:
+                            need_to_be_reconnected = True
                             disconnection_timer.cancel()
-                            #disconnection_timer.join()
                             print("CANCEL TIMER")
                             disconnection_timer = None
 
@@ -425,11 +427,14 @@ def start_server():
                                     game.send_turn()
 
                             wait.remove(waiting_ip)
+
                 connection_list.append(user)
-                room.users.append(user)
-                room.instructions(user)
-                print ('New connection from {} {} '.format(user.name,
-                                                           user.ip))
+
+                if not need_to_be_reconnected:
+                    room.users.append(user)
+                    room.instructions(user)
+                    print ('New connection from {} {} '.format(user.name,
+                                                               user.ip))
 
             else:
                 data = client.socket.recv(RECV_BUFFER)
