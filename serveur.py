@@ -46,7 +46,11 @@ class Game:
         self.grids = [Grid(), Grid(), Grid()]
         self.turn = -1
 
-
+    """
+    Appends the observator to the players array of the game and removes it from
+    the observators. Starts the game is both slots are filled and broadcast a msg
+    to everyone in the game.
+    """
     def playing(self, observator):
         if self.players[P1] != None and self.players[P2] != None:
             observator.socket.send(b'MSG Partie en cours$')
@@ -174,7 +178,10 @@ class Game:
                     self.end_game()
                 print ('Sending encoded grid to {}'.format(player.name))
 
-
+    """
+    Broadcast the message parsed in parameter (must be encoded in utf-8) to
+    every observator of the game
+    """
     def broadcast_obs(self, msg):
         for obs in self.observators:
             obs.socket.send(msg)
@@ -406,6 +413,7 @@ def start_server():
                     print ('Client {} ({}) disconnected'.format(client.name,
                                                                 client.ip))
                     connection_list.remove(client)
+                    room.users.remove(client)
                     client.socket.close()
 
 
