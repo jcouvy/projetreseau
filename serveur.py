@@ -49,7 +49,7 @@ class Game:
 
     def playing(self, observator):
         if self.players[P1] != None and self.players[P2] != None:
-            obs.socket.send(b'MSG Partie en cours$')
+            observator.socket.send(b'MSG Partie en cours$')
             return
 
         for i in range(2):
@@ -62,6 +62,8 @@ class Game:
                     msg = 'MSG La partie commence !\n Joueur 1 - '+self.players[P1].name+' O\n Joueur 2 - '+self.players[P2].name+' X\n$'
                     self.players[P1].socket.send(msg.encode('utf-8'))
                     self.players[P2].socket.send(msg.encode('utf-8'))
+                    self.broadcast_obs(msg.encode('utf-8'))
+                    self.broadcast_obs(self.encode_grid(self.grids[OBS]))
                     self.start()
                     return
                 observator.socket.send(b'MSG En attente d\'un adversaire...$')
@@ -121,7 +123,7 @@ class Game:
             self.playing(observator)
         #elif command is "quit":
         else:
-            observator.socket.send(b'MSG Commande inconnue.$')
+            observator.socket.send(b'MSG Commande inconnue$')
 
 
     """
@@ -169,6 +171,10 @@ class Game:
                     self.send_turn()
                 print ('Sending encoded grid to {}'.format(player.name))
 
+
+    def broadcast_obs(self, msg):
+        for obs in self.observators:
+            obs.socket.send(msg)
     """
     Checks if the game is over (if a win condition is found on the global Grid).
     Send a byte-string to each players according to the output of the game.
@@ -178,12 +184,17 @@ class Game:
         if state == EMPTY:
             self.players[P1].socket.send(b'DRAW$')
             self.players[P2].socket.send(b'DRAW$')
+            self.broadcast_obs(b'DRAW$')
         if state == J1:
             self.players[P1].socket.send(b'WIN$')
             self.players[P2].socket.send(b'LOSE$')
+            msg = 'MSG '+self.players[P1].name+' remporte la partie$'
+            self.broadcast_obs(msg.encode('utf-8'))
         if state == J2:
             self.players[P1].socket.send(b'LOSE$')
             self.players[P2].socket.send(b'WIN$')
+            msg = 'MSG '+self.players[P2].name+' remporte la partie$'
+            self.broadcast_obs(msg.encode('utf-8'))
         return state
 
 
