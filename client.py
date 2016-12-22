@@ -29,7 +29,7 @@ def start_client(address):
         s_to_read, _, _ = select.select([s], [], [])
         for tmp_s in s_to_read:
             server_msg = tmp_s.recv(4096)
-            #print(server_msg)
+            print(server_msg)
             str_message = server_msg.decode("utf-8")
             commands = str_message.split('$')
             execute(commands, grid, tmp_s)
@@ -39,8 +39,13 @@ def start_client(address):
 Wait for user input and send to the server.
 """
 def prompt(socket):
+    tcflush(sys.stdin, TCIFLUSH)
     cmd = input()
+    if not cmd.strip():
+        print ('Vous devez entrer une commande')
+        prompt(socket)
     socket.send(bytearray(cmd, "utf-8"))
+    # print('')
 
 """
 This function handles the different messages sent from the server.
@@ -86,6 +91,7 @@ def execute(commands, grid, socket):
             for name in usernames:
                 if name != "":
                     print(name)
+            print('')
 
         if command.startswith("LISTG"):
             list = command.replace("LISTG", "")
@@ -103,6 +109,7 @@ def execute(commands, grid, socket):
                 for game in games:
                     if game != "":
                         print(game)
+            print('')
 
 
         if command.startswith("MSG"):

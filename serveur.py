@@ -40,22 +40,47 @@ Each byte-message sent by the server to the clients is delimited with a $ sign.
 """
 class Game:
     def __init__(self, gameId):
-        self.id = gameId
+        self.gameId = gameId
         self.players = [None, None]
         self.observators = []
         self.grids = [Grid(), Grid(), Grid()]
         self.turn = -1
 
+
+    def playing(self, observator):
+        if self.players[P1] != None and self.players[P2] != None:
+            observator.socket.send(b'MSG Partie en cours$')
+            return
+
+        for i in range(2):
+            if self.players[i] == None:
+                # Append the client to the player array and remove it from
+                # the observators.
+                self.players[i] = observator
+                self.observators.remove(observator)
+                if self.players[P1] != None and self.players[P2] != None:
+                    msg = 'MSG La partie commence !\n Joueur 1 - '+self.players[P1].name+' O\n Joueur 2 - '+self.players[P2].name+' X\n$'
+                    self.players[P1].socket.send(msg.encode('utf-8'))
+                    self.players[P2].socket.send(msg.encode('utf-8'))
+                    self.broadcast_obs(msg.encode('utf-8'))
+                    self.broadcast_obs(self.encode_grid(self.grids[OBS]))
+                    self.start()
+                    return
+                observator.socket.send(b'MSG En attente d\'un adversaire...$')
+                return
+
+
     """
     Fills the Game structure and sends a byte message encoding each player's grid.
     The first turn is chosen with a pseudo random coin-flip.
     """
-    def start(self, playerA, playerB):
-        self.players = [playerA, playerB]
+    def start(self):
+        # self.players = [playerA, playerB]
         self.turn = random.randint(1,2)
 
         self.players[P1].socket.send(b'GRID 000000000$')
         self.players[P2].socket.send(b'GRID 000000000$')
+        self.send_turn()
 
     """
     Send the next turn in a byte-string to each player.
@@ -86,13 +111,28 @@ class Game:
         msg = msg + '$'
         return msg.encode('utf-8')
 
+
+    """
+    This function decodes the observator input. Allows the observator to start a game,
+    or allows him to quit the game.
+    """
+    def obs_handler(self, observator, data):
+        command = data.decode("utf-8")
+        print(command)
+        if command == "play":
+            self.playing(observator)
+        #elif command is "quit":
+        else:
+            observator.socket.send(b'MSG Commande inconnue$')
+
+
     """
     Decodes the player's move, modifies the according Grid, sends the encoded grid
     back and then updates the turn. Exceptions are raised in order to prevent the server
     from stopping if any player tries an invalid move (i.e: Grid.play() assert fails).
     The player is asked to play again if any exception is caught.
     """
-    def handler(self, player, data):
+    def player_handler(self, player, data):
         try:
             cellNum = int(data.decode())
         except ValueError:
@@ -129,8 +169,14 @@ class Game:
 
                 if self.game_over() == -1:
                     self.send_turn()
+                else:
+                    self.end_game()
                 print ('Sending encoded grid to {}'.format(player.name))
 
+
+    def broadcast_obs(self, msg):
+        for obs in self.observators:
+            obs.socket.send(msg)
     """
     Checks if the game is over (if a win condition is found on the global Grid).
     Send a byte-string to each players according to the output of the game.
@@ -140,14 +186,34 @@ class Game:
         if state == EMPTY:
             self.players[P1].socket.send(b'DRAW$')
             self.players[P2].socket.send(b'DRAW$')
+            self.broadcast_obs(b'DRAW$')
         if state == J1:
             self.players[P1].socket.send(b'WIN$')
             self.players[P2].socket.send(b'LOSE$')
+            msg = 'MSG '+self.players[P1].name+' remporte la partie$'
+            self.broadcast_obs(msg.encode('utf-8'))
         if state == J2:
             self.players[P1].socket.send(b'LOSE$')
             self.players[P2].socket.send(b'WIN$')
+            msg = 'MSG '+self.players[P2].name+' remporte la partie$'
+            self.broadcast_obs(msg.encode('utf-8'))
         return state
 
+
+
+    def end_game(self):
+        end_msg = "Vous avez été replacé parmi les observateurs, entrez la commande <play> pour pouvoir rejouer."
+
+        self.observators.append(self.players[P1])
+
+        self.players[P1].socket.send(bytearray("MSG " + end_msg + "$", "utf-8"))
+        self.players[P1].socket.send(b'CMD$')
+        self.players[P1] = None
+
+        self.observators.append(self.players[P2])
+        self.players[P2].socket.send(bytearray("MSG " + end_msg + "$", "utf-8"))
+        self.players[P2].socket.send(b'CMD$')
+        self.players[P2] = None
 
 """
 The server contains only 1 Room where 3 games are hosted (by default).
@@ -174,32 +240,20 @@ class Room:
             user.socket.send(msg.encode('utf-8'))
 
     """
-    Informs the Room when a game starts
-    """
-    def game_started(self, gameId):
-        for game in self.games:
-            if game.gameId is gameId:
-                print ('New game started in {}\n' \
-                       ' Player 1: {}\n'     \
-                       ' Player 2: {}'.format(gameId,
-                                              game.players[0].name,
-                                              game.players[1].name))
-        self.broadcast_all('Une partie demarre à la table '+ gameId +' utilisez join <' + gameId +'> pour observer')
-
-    """
     Appends the user to the observator list of the game named gameId
     """
     def join_game(self, user, gameId):
         for game in self.games:
-            if game.gameId is gameId:
+            if game.gameId == gameId:
+                print('APPEND {} TO :'.format(user.name))
+                print(game.observators)
                 game.observators.append(user)
-                # Sending the observator grid upon connection
-                user.socket.send(game.encode_grid(0))
+                print(game.observators)
+                user.socket.send(b'CMD$')
+                #game.playing(game.observators[0])
         # Removing the user from the Room
+        print ('Removing {} from Room\'s userlist'.format(user.name))
         self.users.remove(user)
-
-    # def challenge_user(self, userA, userB):
-    #     return
 
     """
     Send the set of available commands to every users in the Room
@@ -210,7 +264,7 @@ class Room:
         - join <game id>  (observer une partie en cours)\n\
         - list games (lister les games)\n\
         - list users\n\
-        - nickname <name> (choisir un pseudo)"
+        - nickname <name> (choisir un pseudo)\n"
         user.socket.send(bytearray("MSG " + msg + "$", "utf-8"))
         user.socket.send('CMD$'.encode('utf-8'))
 
@@ -233,11 +287,11 @@ class Room:
         msg = 'LISTG '
         for game in self.games:
             if game.players[P1] != None and game.players[P2] != None:
-                msg = msg + game.id + ','
+                msg = msg + game.gameId + ','
         msg = msg + ";"
         for game in self.games:
             if game.players[P1] == None and game.players[P2] == None:
-                msg = msg + game.id + ','
+                msg = msg + game.gameId + ','
         msg = msg + '$'
         print ('Sending the list of active games to {}'.format(user.name))
         user.socket.send(msg.encode('utf-8'))
@@ -256,34 +310,53 @@ class Room:
         user.socket.send(msg.encode('utf-8'))
         user.socket.send('CMD$'.encode('utf-8'))
 
-    def handler(self, data, user):
+    def handler(self, user, data):
         command = data.decode("utf-8")
         if command == "list games":
             self.list_games(user)
         elif command == "list users":
             self.list_users(user)
         elif command.startswith("join "):
-            #gameID = command.strip("join ")
-            gameID = command.replace("join ", "")
-            # if gameID != "":
-            #     #Appel à join_game(gameID)
+            gameId = command.replace("join ", "")
+            self.join_game(user, gameId)
         elif command.startswith("nickname "):
-            #newName = command.strip("nickname ")
             newName = command.replace("nickname ", "")
             if newName != "":
                 self.change_username(user, newName)
-        elif command.startswith("challenge "):
-            #opponent = command.strip("challenge ")
-            opponent = command.replace("challenge ", "")
-            # if opponent != "":
-                #Appel à challenge_user()
         else:
-            msg = "Commande inconnue."
-            user.socket.send(bytearray("MSG " + msg + "$", "utf-8"))
+            user.socket.send('MSG Commande Inconnue !$'.encode('utf-8'))
             user.socket.send('CMD$'.encode('utf-8'))
 
+"""
+There are three different handlers for each client's type:
+class Game - observator (watching a game)
+class Game - player (playing in a game)
+class Room - user (not in any game)
+Each handler is called by the server depending on the socket type
+"""
+def pick_handler(room, client, data):
+    for user in room.users:
+        if client is user :
+            room.handler(client, data)
+            return
 
+    for game in room.games:
+        for player in game.players:
+            if client is player:
+                print('Received data from {}'.format(client.name))
+                game.player_handler(client, data)
+                return
+        for obs in game.observators:
+            if client is obs:
+                print('Received data from {}'.format(client.name))
+                game.obs_handler(client, data)
 
+"""
+Starts a TCP server on port 8888 accepting IPv4 connections.
+The server starts a single Room that hosts multiple game lobbies. When
+connecting, a user is appended to the Room's user list and managed according to
+his status (user, player, obs).
+"""
 def start_server():
 
     HOST = ''
@@ -313,33 +386,14 @@ def start_server():
                             addr)
                 connection_list.append(user)
                 room.users.append(user)
-                print(room.users)
-                print(room.users[0].name)
                 room.instructions(user)
                 print ('New connection from {} {} '.format(user.name,
                                                            user.ip))
 
-                # if (len(connection_list) - 1) == 2:
-                #     room.games[0].start(connection_list[1], connection_list[2])
-                #     room.games[0].send_turn()
-                #     print ('New game started \n' \
-                #            ' Player 1: {}\n'     \
-                #            ' Player 2: {}'.format(room.games[0].players[0].name,
-                #                                   room.games[0].players[1].name))
-
             else:
                 data = client.socket.recv(RECV_BUFFER)
                 if data:
-                    for user in room.users:
-                        if client == user :
-                            room.handler(data, client)
-
-                    for game in room.games:
-                        for player in game.players:
-                            if client is player:
-                                print('Received data from {}'.format(client.name))
-                                game.handler(client, data)
-
+                    pick_handler(room, client, data)
                 else:
                     print ('Client {} ({}) disconnected'.format(client.name,
                                                                 client.ip))
