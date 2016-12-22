@@ -39,12 +39,13 @@ def start_client(address):
 Wait for user input and send to the server.
 """
 def prompt(socket):
+    tcflush(sys.stdin, TCIFLUSH)
     cmd = input()
     if not cmd.strip():
         print ('Vous devez entrer une commande')
-        cmd = input()
+        prompt(socket)
     socket.send(bytearray(cmd, "utf-8"))
-    print('')
+    # print('')
 
 """
 This function handles the different messages sent from the server.
