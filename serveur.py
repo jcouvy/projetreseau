@@ -363,6 +363,10 @@ def pick_handler(room, client, data):
                 game.obs_handler(client, data)
 
 
+"""
+Automatically declares the remaining player as winner if his opponent doesn't
+reconnect in time.
+"""
 def forfeit(game):
     for player in game.players:
         if player:
@@ -375,13 +379,21 @@ def forfeit(game):
     player.socket.send(msg.encode('utf-8'))
     player.socket.send(b'CMD$')
 
-def disconnection_routine(reconnection_list, game):
-    print("Timeout")
+"""
+If the timer runs out:
+Resets the timer to None, forfeits the game and remove the user from the
+pending list.
+
+reconnection_list is a list of 3-tuples:
+(game ID, client IP, player n°)
+"""
+def timeout(reconnection_list, game):
     disconnection_timer = None
     forfeit(game)
     for element in reconnection_list:
         if element[0] == game.gameId:
             reconnection_list.remove(element)
+            print("{} timed out".format(element[1]))
 
 """
 Starts a TCP server on port 8888 accepting IPv4 connections.
@@ -474,7 +486,7 @@ def start_server():
                                         enemy = P1 if i == P2 else P2
                                         game.players[i] = None
                                         reconnection_list.append((game.gameId, client.ip, i+1))
-                                        disconnection_timer = Timer(20.0, disconnection_routine, args=(reconnection_list, game,))
+                                        disconnection_timer = Timer(20.0, timeout, args=(reconnection_list, game,))
                                         disconnection_timer.start()
                                         disconnection_msg = "MSG Votre adversaire s'est déconnecté... Veuillez patienter.$"
                                         game.players[enemy].socket.send(bytearray(disconnection_msg, "utf-8"))
