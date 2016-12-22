@@ -2,10 +2,11 @@
 #!/usr/bin/python3
 
 import socket, select
-import re
 import sys
 import random
+import time
 
+from threading import Thread, Timer
 from grid import *
 
 P1  = 0
@@ -366,6 +367,13 @@ def pick_handler(room, client, data):
                 print('Received data from {}'.format(client.name))
                 game.obs_handler(client, data)
 
+
+def disconnection_routine():
+    print("YOLO")
+
+    #forfeit()
+
+
 """
 Starts a TCP server on port 8888 accepting IPv4 connections.
 The server starts a single Room that hosts multiple game lobbies. When
@@ -389,6 +397,8 @@ def start_server():
                                                 PORT))
 
     room = Room()
+    disconnection_timer = None
+    wait = []
 
     while True:
         read_sockets, _ , _ = select.select(connection_list, [], [])
@@ -398,7 +408,23 @@ def start_server():
                 new_socket, addr = server_socket.accept()
                 user = User(new_socket,
                             'Guest'+str(random.randint(0,9999)),
-                            addr)
+                            addr[0])
+                print(wait)
+                for waiting_ip in wait:
+                    if user.ip == waiting_ip[1]:
+                        if disconnection_timer != None:
+                            disconnection_timer.cancel()
+                            #disconnection_timer.join()
+                            print("CANCEL TIMER")
+                            disconnection_timer = None
+
+                            for game in room.games:
+                                if game.gameId == waiting_ip[0]:
+                                    game.players[waiting_ip[2]] = user
+                                    user.socket.send(game.encode_grid(waiting_ip[2]+1))
+                                    game.send_turn()
+
+                            wait.remove(waiting_ip)
                 connection_list.append(user)
                 room.users.append(user)
                 room.instructions(user)
@@ -412,8 +438,30 @@ def start_server():
                 else:
                     print ('Client {} ({}) disconnected'.format(client.name,
                                                                 client.ip))
+                    for user in room.users:
+                        if client is user:
+                            room.users.remove(client)
+                    for game in room.games:
+                        for obs in game.observators:
+                            if client is obs:
+                                game.observators.remove(obs)
+                        for player in game.players:
+                            if client is player:
+                                if client is game.players[P1]:
+                                    game.players[P1] = None
+                                    wait.append((game.gameId, client.ip, P1))
+                                    disconnection_timer = Timer(20.0, disconnection_routine)
+                                    disconnection_timer.start()
+                                    disconnection_msg = "MSG Votre adversaire s'est déconnecté... Veuillez patienter.$"
+                                    game.players[P2].socket.send(bytearray(disconnection_msg, "utf-8"))
+                                elif client is game.players[P2]:
+                                    game.players[P2] = None
+                                    wait.append((game.gameId, client.ip, P2))
+                                    disconnection_timer = Timer(20.0, disconnection_routine)
+                                    disconnection_timer.start()
+                                    disconnection_msg = "MSG Votre adversaire s'est déconnecté... Veuillez patienter.$"
+                                    game.players[P1].socket.send(bytearray(disconnection_msg, "utf-8"))
                     connection_list.remove(client)
-                    room.users.remove(client)
                     client.socket.close()
 
 
