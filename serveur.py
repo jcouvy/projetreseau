@@ -67,6 +67,7 @@ class Game:
                 observator.socket.send(b'MSG En attente d\'un adversaire...$')
                 return
 
+
     """
     Fills the Game structure and sends a byte message encoding each player's grid.
     The first turn is chosen with a pseudo random coin-flip.
@@ -108,13 +109,28 @@ class Game:
         msg = msg + '$'
         return msg.encode('utf-8')
 
+
+    """
+    This function decodes the observator input. Allows the observator to start a game,
+    or allows him to quit the game.
+    """
+    def obs_handler(self, observator, data):
+        command = data.decode("utf-8")
+        print(command)
+        if command == "play":
+            self.playing(observator)
+        #elif command is "quit":
+        else:
+            observator.socket.send(b'MSG Commande inconnue.$')
+
+
     """
     Decodes the player's move, modifies the according Grid, sends the encoded grid
     back and then updates the turn. Exceptions are raised in order to prevent the server
     from stopping if any player tries an invalid move (i.e: Grid.play() assert fails).
     The player is asked to play again if any exception is caught.
     """
-    def handler(self, player, data):
+    def player_handler(self, player, data):
         try:
             cellNum = int(data.decode())
         except ValueError:
@@ -205,7 +221,8 @@ class Room:
                 print(game.observators)
                 game.observators.append(user)
                 print(game.observators)
-                game.playing(game.observators[0])
+                user.socket.send(b'CMD$')
+                #game.playing(game.observators[0])
         # Removing the user from the Room
         print ('Removing {} from Room\'s userlist'.format(user.name))
         self.users.remove(user)
@@ -291,7 +308,7 @@ Each handler is called by the server depending on the socket type
 """
 def pick_handler(room, client, data):
     for user in room.users:
-        if client == user :
+        if client is user :
             room.handler(client, data)
             return
 
@@ -299,10 +316,12 @@ def pick_handler(room, client, data):
         for player in game.players:
             if client is player:
                 print('Received data from {}'.format(client.name))
-                game.handler(client, data)
+                game.player_handler(client, data)
                 return
-
-        #TODO observator handler
+        for obs in game.observators:
+            if client is obs:
+                print('Received data from {}'.format(client.name))
+                game.obs_handler(client, data)
 
 """
 Starts a TCP server on port 8888 accepting IPv4 connections.
