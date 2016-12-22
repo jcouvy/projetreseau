@@ -80,9 +80,7 @@ class Game:
     The first turn is chosen with a pseudo random coin-flip.
     """
     def start(self):
-        # self.players = [playerA, playerB]
         self.turn = random.randint(1,2)
-
         self.players[P1].socket.send(b'GRID 000000000$')
         self.players[P2].socket.send(b'GRID 000000000$')
         self.send_turn()
@@ -262,7 +260,6 @@ class Room:
                 game.observators.append(user)
                 print(game.observators)
                 user.socket.send(b'CMD$')
-                #game.playing(game.observators[0])
         # Removing the user from the Room
         print ('Removing {} from Room\'s userlist'.format(user.name))
         self.users.remove(user)
@@ -398,7 +395,7 @@ def start_server():
 
     room = Room()
     disconnection_timer = None
-    wait = []
+    reconnection_list = []
     need_to_be_reconnected = None
 
     while True:
@@ -410,23 +407,23 @@ def start_server():
                 user = User(new_socket,
                             'Guest'+str(random.randint(0,9999)),
                             addr[0])
-                print(wait)
+
                 need_to_be_reconnected = False
-                for waiting_ip in wait:
-                    if user.ip == waiting_ip[1]:
+                # reco list : [game ID, client IP, P1/P2]
+                for element in reconnection_list:
+                    if user.ip == element[1]:
                         if disconnection_timer != None and disconnection_timer.isAlive:
                             need_to_be_reconnected = True
                             disconnection_timer.cancel()
-                            print("CANCEL TIMER")
                             disconnection_timer = None
 
                             for game in room.games:
-                                if game.gameId == waiting_ip[0]:
-                                    game.players[waiting_ip[2]] = user
-                                    user.socket.send(game.encode_grid(waiting_ip[2]+1))
+                                if game.gameId == element[0]:
+                                    game.players[element[2]] = user
+                                    user.socket.send(game.encode_grid(element[2]))
                                     game.send_turn()
 
-                            wait.remove(waiting_ip)
+                            reconnection_list.remove(element)
 
                 connection_list.append(user)
 
@@ -452,20 +449,16 @@ def start_server():
                                 game.observators.remove(obs)
                         for player in game.players:
                             if client is player:
-                                if client is game.players[P1]:
-                                    game.players[P1] = None
-                                    wait.append((game.gameId, client.ip, P1))
-                                    disconnection_timer = Timer(20.0, disconnection_routine)
-                                    disconnection_timer.start()
-                                    disconnection_msg = "MSG Votre adversaire s'est déconnecté... Veuillez patienter.$"
-                                    game.players[P2].socket.send(bytearray(disconnection_msg, "utf-8"))
-                                elif client is game.players[P2]:
-                                    game.players[P2] = None
-                                    wait.append((game.gameId, client.ip, P2))
-                                    disconnection_timer = Timer(20.0, disconnection_routine)
-                                    disconnection_timer.start()
-                                    disconnection_msg = "MSG Votre adversaire s'est déconnecté... Veuillez patienter.$"
-                                    game.players[P1].socket.send(bytearray(disconnection_msg, "utf-8"))
+                                for i in range(2):
+                                    if client is game.players[i]:
+                                        enemy = P1 if i == P2 else P2
+                                        game.players[i] = None
+                                        reconnection_list.append((game.gameId, client.ip, i+1))
+                                        disconnection_timer = Timer(20.0, disconnection_routine)
+                                        disconnection_timer.start()
+                                        disconnection_msg = "MSG Votre adversaire s'est déconnecté... Veuillez patienter.$"
+                                        game.players[enemy].socket.send(bytearray(disconnection_msg, "utf-8"))
+                                        
                     connection_list.remove(client)
                     client.socket.close()
 
