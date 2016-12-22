@@ -110,6 +110,10 @@ class Game:
         return msg.encode('utf-8')
 
 
+    """
+    This function decodes the observator input. Allows the observator to start a game,
+    or allows him to quit the game.
+    """
     def obs_handler(self, observator, data):
         command = data.decode("utf-8")
         print(command)
