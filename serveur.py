@@ -4,7 +4,6 @@
 import socket, select
 import sys
 import random
-import time
 
 from threading import Thread, Timer
 from grid import *
@@ -388,7 +387,15 @@ def disconnection_routine(reconnection_list, game):
 Starts a TCP server on port 8888 accepting IPv4 connections.
 The server starts a single Room that hosts multiple game lobbies. When
 connecting, a user is appended to the Room's user list and managed according to
-his status (user, player, obs).
+his status (user, player, obs). If the user was in the reconnection list, then
+he will be connected back to his game, and the game will continue.
+
+This function handles disconnections too. If a room's user or an observator
+is disconnected, then the server just close the socket.
+But if it's a player that is disconnected, then the server adds the player in the
+reconnection list, and starts a timer.
+If the disconnected player is not able to reconnect on time, then the other player wins by forfeit
+and is placed among the other observators.
 """
 def start_server():
 
