@@ -20,4 +20,6 @@ URL: http://dept-info.labri.fr/~thibault/Reseau/sujet.pdf
 - Salon de jeux (parties simultanées) [✓]
 - Gestion deconnexion joueur pdt partie [✓]
   - TODO: more debug :-)
-- Tableau de score [✗]
+
+
+- Rapport :-( [X]
