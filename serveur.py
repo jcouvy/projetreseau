@@ -92,9 +92,11 @@ class Game:
         if self.turn == J1:
             self.players[P1].socket.send(b'PLAY$')
             self.players[P2].socket.send(b'WAIT$')
+            self.broadcast_obs('MSG Au tour du Joueur 1$'.encode('utf-8'))
         else:
             self.players[P1].socket.send(b'WAIT$')
             self.players[P2].socket.send(b'PLAY$')
+            self.broadcast_obs('MSG Au tour du Joueur 2$'.encode('utf-8'))
 
     """
     Returns an encoded byte-string of the player's Grid given in arg.
@@ -257,8 +259,15 @@ class Room:
                 print(game.observators)
                 game.observators.append(user)
                 print(game.observators)
-                join_msg = "MSG Vous venez de rejoindre la partie : " + gameId + "$"
+                join_msg = "MSG Vous venez de rejoindre la partie : " + gameId + "\n" \
+                + "Entrez la commande <play> pour pouvoir jouer$"
                 user.socket.send(bytearray(join_msg, "utf-8"))
+                if game.players[P1] and game.players[P2]:
+                    join_msg = 'MSG Une partie est en cours:\n' \
+                    + ' - Joueur 1: ' + game.players[P1].name + ' ' + symbols[J1] + '\n'\
+                    + ' - Joueur 2: ' + game.players[P2].name + ' ' + symbols[J2] + '$'
+                    user.socket.send(join_msg.encode('utf-8'))
+                    user.socket.send(game.encode_grid(game.grids[OBS]))
                 user.socket.send(b'CMD$')
         # Removing the user from the Room
         print ('Removing {} from Room\'s userlist'.format(user.name))
