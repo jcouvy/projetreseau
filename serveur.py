@@ -257,6 +257,8 @@ class Room:
                 print(game.observators)
                 game.observators.append(user)
                 print(game.observators)
+                join_msg = "MSG Vous venez de rejoindre la partie : " + gameId + "$"
+                user.socket.send(bytearray(join_msg, "utf-8"))
                 user.socket.send(b'CMD$')
         # Removing the user from the Room
         print ('Removing {} from Room\'s userlist'.format(user.name))
@@ -329,7 +331,12 @@ class Room:
             self.list_users(user)
         elif command.startswith("join "):
             gameId = command.replace("join ", "")
-            self.join_game(user, gameId)
+            for game in self.games:
+                if gameId == game.gameId:
+                    self.join_game(user, gameId)
+                    return
+            user.socket.send('MSG Nom de partie inconnu !$'.encode('utf-8'))
+            user.socket.send('CMD$'.encode('utf-8'))
         elif command.startswith("nickname "):
             newName = command.replace("nickname ", "")
             if newName != "":
