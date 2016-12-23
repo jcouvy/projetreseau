@@ -459,7 +459,7 @@ def start_server():
                             for game in room.games:
                                 if game.gameId == element[0]:
                                     game.players[element[2]] = user
-                                    user.socket.send(game.encode_grid(element[2]))
+                                    user.socket.send(game.encode_grid(element[2]+1))
                                     game.send_turn()
 
                             reconnection_list.remove(element)
@@ -492,7 +492,7 @@ def start_server():
                                     if client is game.players[i]:
                                         enemy = P1 if i == P2 else P2
                                         game.players[i] = None
-                                        reconnection_list.append((game.gameId, client.ip, i+1))
+                                        reconnection_list.append((game.gameId, client.ip, i))
                                         disconnection_timer = Timer(20.0, timeout, args=(reconnection_list, game,))
                                         disconnection_timer.start()
                                         disconnection_msg = "MSG Votre adversaire s'est déconnecté... Veuillez patienter.$"
