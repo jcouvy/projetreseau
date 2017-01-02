@@ -6,9 +6,12 @@ Gauthier LAMARQUE
 
 1.Présentation du projet
 
+Introduction:
+L'objectif de ce projet etait de mettre en reseau un jeu de morpion aveugle avec une architecture client-serveur similaire a celle vue dans le TP sur le serveur de chat. Nous avons donc implemente une architecture TCP ecrite en Python avec select().
+
 Structure:
 
-Afin de réaliser un jeu de morpion aveugle, nous avons décidé de le stucturer avec des classes.
+Afin de réaliser cette architecture, nous avons décidé de la stucturer avec des classes.
 Ces classes sont les suivantes:
 la classe User,
 la classe Game,
@@ -30,26 +33,40 @@ trois grilles aux contenus différents:
 	et enfin la dernière contient tous les coups joués et est envoyée aux observateurs présents.
 un entier indiquant le tour de jeu.
 
-La classe Room est un salon d'accueil où les clients sont envoyés à la connexion. Depuis ce salon d'accueil, les clients peuvent rejoindre un salon de jeu, ou effectuer diverses actions, comme changer de pseudonyme, obtenir une liste des salons de jeu ou des utilisateurs présents dans le salon d'accueil.
+La classe Room est un salon d'accueil où les clients sont envoyés à la connexion. Depuis ce salon, les clients peuvent rejoindre un salon de jeu, ou effectuer diverses actions comme changer de pseudonyme, obtenir la liste des salons de jeu ou des utilisateurs présents dans le salon d'accueil.
 Elle contient les attributs suivants:
 une liste de clients,
 une liste de salons de jeu (3 dans notre implémentation, choix arbitraire).
 
 Pourquoi cette structure?
 
-Nous avons choisi cette structure car nous avions en tête de réaliser des parties multiples observables, et nous pensions que cette structure pouvait remplir ces objectifs. Ce niveau d'abstraction nous permet aussi d'avoir un code très peu redondant, et plutôt modulaire.
-L'utilisation de classes permet de différencier aisément les diverses entités que l'on manipule, et de faciliter l'imbrication de ces entités (par exemple : ajouter un joueur dans un salon de jeu attenant au salon d'accueil).
+Nous avons choisi cette structure car nous avions en tête de réaliser
+des parties multiples observables, et nous pensions que cette
+structure pouvait remplir ces objectifs. Ce niveau d'abstraction nous
+permet aussi d'avoir un code peu redondant, plus modulaire et plus
+facile a comprendre. En effet, l'utilisation de classes permet de
+différencier aisément les diverses entités que l'on manipule, et de
+faciliter l'imbrication de ces entités entre-elles (par exemple :
+ajouter un joueur dans un salon de jeu attenant au salon d'accueil).
 
 Protocole de communication:
 
 Pour que les clients et le serveur puissent communiquer, nous avons établi un protocole permettant à chacun de recevoir et traiter des commandes. Conforme au sujet, le client doit réaliser les affichages. Le protocole est de la forme suivante:
-"PREFIXE <contenu>$"
+"PREFIXE <contenu>DELIMITEUR"
 Le préfixe de la commande est une petite chaîne de caractères majuscules qui permet au client de savoir quel est le type de la commande reçue (par exemple "GRID <contenu>$" indique au client qu'il doit remplir sa grille et l'afficher)
 Le contenu lui dépend du type de la commande, il peut être inexistant sur certaines commandes.
-Le caractère '$' nous sert de délimiteur. En effet, à cause du protocole TCP, le client peut recevoir des commandes concaténées. Afin de séparer ces commandes, nous avons choisi d'utiliser un délimiteur permettant de séparer ces commandes et les exécuter dans l'ordre.
+Le caractère '$' nous sert de délimiteur. En effet, avec un serveur implementé en TCP, les transferts d'informations se font par flux de données c'est a dire que l'on rempli un buffer de taille définie (4096 dans notre cas); c'est pourquoi nous avons choisi d'utiliser un délimiteur de commande permettant au client de différencier les commandes et les exécuter dans le bon ordre.
 
 Fonctionnalités:
 
 Comme précisé dans le sujet, le serveur et le client utilisent le même fichier pour s'exécuter. Seul le nombre d'argument change. En effet le client doit renseigner une adresse à laquelle se connecter alors que le serveur n'a pas besoin d'ajouter d'arguments.
-La connexion est de type TCP (comme celle que l'on a vue lors du TP "Serveur de chat"). Nous avons séparé les codes des clients et du serveur dans des fichiers distincts.
-A la connexion, le client se retrouve dans le salon d'accueil (Room dans le code), et on lui donne la liste des commandes possibles, c'est à dire, changer de pseudonyme, obtenir la liste des autres clients ou des parties ou enfin rejoindre une partie. Les entrées client sont gérées par un processus léger (thread) car la fonction "inpu.t()" est bloquante, c'est à dire que tant qu'il n'y a pas d'entrée client, on ne peut rien afficher. L'utilisation du processus léger permet d'afficher au client les divers messages du serveur tout en assurant une possible entrée clavier.
+
+$> python3 tictactoe.py (serveur)
+$> python3 tictactoe.py localhost (client connecte en local dans ce cas)
+
+Nous avons séparé les codes des clients et du serveur dans des fichiers distincts que nous importons dans le main responsable de lancer les bon programmes (plus ergonomique et modulaire).
+A la connexion, le client se retrouve dans le salon d'accueil (Room dans le code), et on lui donne la liste des commandes possibles, c'est à dire:
+changer de pseudonyme,
+obtenir la liste des autres clients ou des parties
+enfin rejoindre une partie.
+Les entrées client sont gérées par un processus léger (thread) car la fonction "input()" est bloquante, c'est à dire que tant qu'il n'y a pas d'entrée client, on ne peut rien afficher. L'utilisation du processus léger permet d'afficher au client les divers messages du serveur tout en assurant une possible entrée clavier.
