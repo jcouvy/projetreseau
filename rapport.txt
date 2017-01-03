@@ -55,7 +55,7 @@ Pour que les clients et le serveur puissent communiquer, nous avons établi un p
 "PREFIXE <contenu>DELIMITEUR"
 Le préfixe de la commande est une petite chaîne de caractères majuscules qui permet au client de savoir quel est le type de la commande reçue (par exemple "GRID <contenu>$" indique au client qu'il doit remplir sa grille et l'afficher)
 Le contenu lui dépend du type de la commande, il peut être inexistant sur certaines commandes.
-Le caractère '$' nous sert de délimiteur. En effet, avec un serveur implementé en TCP, les transferts d'informations se font par flux de données c'est a dire que l'on rempli un buffer de taille définie (4096 dans notre cas); c'est pourquoi nous avons choisi d'utiliser un délimiteur de commande permettant au client de différencier les commandes et les exécuter dans le bon ordre.
+Le caractère '$' nous sert de délimiteur. En effet, avec un serveur implementé en TCP, les transferts d'informations se font par flux de données c'est a dire que l'on remplit un buffer de taille définie (4096 dans notre cas); c'est pourquoi nous avons choisi d'utiliser un délimiteur de commande permettant au client de différencier les commandes et les exécuter dans le bon ordre.
 
 Fonctionnalités:
 
@@ -70,3 +70,8 @@ changer de pseudonyme,
 obtenir la liste des autres clients ou des parties
 enfin rejoindre une partie.
 Les entrées client sont gérées par un processus léger (thread) car la fonction "input()" est bloquante, c'est à dire que tant qu'il n'y a pas d'entrée client, on ne peut rien afficher. L'utilisation du processus léger permet d'afficher au client les divers messages du serveur tout en assurant une possible entrée clavier.
+
+A patir de là, l'utilisateur à la possibilité de se rendre dans un des trois salons de jeu disponibles. Lorsqu'un utilisateur rejoint un salon de jeu, il est automatiquement considéré comme un observateur. Il lui est possible de jouer une partie si aucune partie est en cours dans le salon, et si il reste une place de joueur libre, en entrant la commande "play". Si deux utilisateurs ont décidé de jouer, alors une partie débute, le serveur gère l'envoi des grilles aux personnes correspondantes et gère aussi le bon déroulement de la partie. A la fin d'une partie, les joueurs sont replacés parmi les observateurs.
+
+Grâce aux différents salons de jeu, il est possible d'avoir des parties simultanées (en l'occurence trois, choix arbitraire). De plus, lorqu'un joueur est deconnecté pendant une partie (et seulement dans ce cas là), la partie est mise en pause, l'utilisateur est enregistré pour une durée limitée par le serveur. Pendant cette période, il est possible pour le joueur de se reconnecter, et grâce à l'adresse IP de l'utilisateur, le serveur peut le reconnaître et le remettre dans sa position de joueur, et reprendre le cours de la partie.
+Si le délai de reconnexion est passé, le joueur restant remporte la partie puis il est replacé parmi les observateurs. Le serveur oublie l'utilisateur deconnecté. Si celui se reconnecte, il sera considéré comme quelconque et entrera dans le salon d'accueil.
