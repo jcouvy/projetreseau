@@ -7,6 +7,17 @@
 \usepackage{minted}
 \usepackage{graphicx}
 
+%% Todo List
+\usepackage{enumitem,amssymb}
+\newlist{todolist}{itemize}{2}
+\setlist[todolist]{label=$\square$}
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+\newcommand{\done}{\rlap{$\square$}{\raisebox{2pt}{\large\hspace{1pt}\cmark}}%
+\hspace{-2.5pt}}
+\newcommand{\wontfix}{\rlap{$\square$}{\large\hspace{1pt}\xmark}}
+
 %% Sets page size and margins
 \usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
 \setlength{\parskip}{.5em}
@@ -109,5 +120,15 @@ Grâce aux différents salons de jeu, il est possible d'avoir des parties simult
 
 
 Si le délai de reconnexion est passé, le joueur restant remporte la partie puis il est replacé parmi les observateurs. Le serveur oublie l'utilisateur deconnecté. Si celui se reconnecte, il sera considéré comme quelconque et entrera dans le salon d'accueil.
+
+\section{Extensions}
+  \begin{todolist}
+  \item[\done] Input/read multithread
+  \item[\done] Instructions fin de partie
+  \item[\done] Parties observables
+  \item[\done] Salon de jeux (parties simultanées)
+  \item[\done] Gestion déconnexion joueur pdt partie
+  \end{todolist}
+\end{itemize}
 
 \end{document}
