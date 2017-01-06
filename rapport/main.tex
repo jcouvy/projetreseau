@@ -106,21 +106,21 @@ $> python3 tictactoe.py localhost (client - içi l'adresse est la boucle locale)
 \end{minted}
 
 Nous avons séparé les codes des clients et du serveur dans des fichiers distincts que nous importons dans le main responsable de lancer les bon programmes (plus ergonomique et modulaire).
-A la connexion, le client se retrouve dans le salon d'accueil (Room dans le code), et on lui donne la liste des commandes possibles, c'est à dire:
+À la connexion, le client se retrouve dans le salon d'accueil (Room dans le code), et on lui donne la liste des commandes possibles, c'est-à-dire:
 changer de pseudonyme,
 obtenir la liste des autres clients ou des parties
 enfin rejoindre une partie.
-Les entrées client sont gérées par un processus léger (thread) car la fonction "input()" est bloquante, c'est à dire que tant qu'il n'y a pas d'entrée client, on ne peut rien afficher. L'utilisation du processus léger permet d'afficher au client les divers messages du serveur tout en assurant une possible entrée clavier.
+
+Les entrées client sont gérées par un processus léger (thread) car la fonction "input()" est bloquante, c'est-à-dire que tant qu'il n'y a pas d'entrée client, on ne peut rien afficher. L'utilisation du processus léger permet d'afficher au client les divers messages du serveur tout en assurant une possible entrée clavier.
 
 
-À partir de là, l'utilisateur à la possibilité de se rendre dans un des trois salons de jeu disponibles. Lorsqu'un utilisateur rejoint un salon de jeu, il est automatiquement considéré comme un observateur. Il lui est possible de jouer une partie si aucune partie est en cours dans le salon, et si il reste une place de joueur libre, en entrant la commande "play". Si deux utilisateurs ont décidé de jouer, alors une partie débute, le serveur gère l'envoi des grilles aux personnes correspondantes et gère aussi le bon déroulement de la partie. A la fin d'une partie, les joueurs sont replacés parmi les observateurs.
+À partir de là, l'utilisateur à la possibilité de se rendre dans un des trois salons de jeu disponibles. Lorsqu'un utilisateur rejoint un salon de jeu, il est automatiquement considéré comme un observateur. Il lui est possible de jouer une partie si aucune partie est en cours dans le salon, et s'il reste une place de joueur libre, en entrant la commande "play". Si deux utilisateurs ont décidé de jouer, alors une partie débute, le serveur gère l'envoi des grilles aux personnes correspondantes et gère aussi le bon déroulement de la partie. A la fin d'une partie, les joueurs sont replacés parmi les observateurs.
 
 
-Grâce aux différents salons de jeu, il est possible d'avoir des parties simultanées (en l'occurence trois, choix arbitraire). De plus, lorqu'un joueur est deconnecté pendant une partie (et seulement dans ce cas là), la partie est mise en pause, l'utilisateur est enregistré pour une durée limitée par le serveur. Pendant cette période, il est possible pour le joueur de se reconnecter, et grâce à l'adresse IP de l'utilisateur, le serveur peut le reconnaître et le remettre dans sa position de joueur, et reprendre le cours de la partie.
+Grâce aux différents salons de jeu, il est possible d'avoir des parties simultanées (en l'occurrence trois, choix arbitraire). De plus, lorque un joueur est déconnecté pendant une partie (et seulement dans ce cas-là), la partie est mise en pause, l'utilisateur est enregistré pour une durée limitée par le serveur. Pendant cette période, il est possible pour le joueur de se reconnecter, et grâce à l'adresse IP de l'utilisateur, le serveur peut le reconnaître et le remettre dans sa position de joueur, et reprendre le cours de la partie.
 
 
-Si le délai de reconnexion est passé, le joueur restant remporte la partie puis il est replacé parmi les observateurs. Le serveur oublie l'utilisateur deconnecté. Si celui se reconnecte, il sera considéré comme quelconque et entrera dans le salon d'accueil.
-
+Si le délai de reconnexion est passé, le joueur restant remporte la partie puis il est replacé parmi les observateurs. Le serveur oublie l'utilisateur déconnecté. Si ce dernier se reconnecte, il sera considéré comme quelconque et entrera dans le salon d'accueil.
 \section{Extensions}
   \begin{todolist}
   \item[\done] Input/read multithread
