@@ -278,7 +278,6 @@ class Room:
     """
     def instructions(self, user):
         msg = "Liste des commandes disponibles:\n\
-        - challenge <username> (défier un joueur)\n\
         - join <game id>  (observer une partie en cours)\n\
         - list games (lister les games)\n\
         - list users\n\
